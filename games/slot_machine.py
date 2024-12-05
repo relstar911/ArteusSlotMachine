@@ -55,14 +55,8 @@ class SlotMachine(BaseGame):
             self.sound_manager.load_sound(name, f'assets/sounds/{file}')
         self.sound_manager.load_music('background', 'assets/music/1-11-Route-101.wav')
         
-        # Load fonts
-        try:
-            self.title_font = self.font_manager.load_font("assets/fonts/Pokemon Solid.ttf", 48)
-            self.challenge_font = self.font_manager.load_font("assets/fonts/Pokemon Solid.ttf", 24)
-        except:
-            print("Pokemon font not found, using default font")
-            self.title_font = pygame.font.Font(None, 48)
-            self.challenge_font = pygame.font.Font(None, 24)
+        # Set title font from font manager
+        self.title_font = self.font_manager.get_font('huge')  # Use huge size for title
         
         # Load and scale sprites
         self.sprites = {}
@@ -79,46 +73,56 @@ class SlotMachine(BaseGame):
         
     def init_ui(self):
         """Initialize all UI elements"""
-        button_y = SCREEN_HEIGHT - 100
+        # Calculate responsive button positions
+        button_width = int(SCREEN_WIDTH * 0.15)  # 15% of screen width
+        button_height = int(SCREEN_HEIGHT * 0.08)  # 8% of screen height
+        padding = int(SCREEN_WIDTH * 0.02)  # 2% of screen width
+        button_y = SCREEN_HEIGHT - button_height - padding
         
-        # Create buttons
+        # Create buttons with improved styling
         self.spin_button = Button(
-            SCREEN_WIDTH//2 - 60,
+            SCREEN_WIDTH//2 - button_width//2,
             button_y,
-            120,
-            50,
+            button_width,
+            button_height,
             "DREHEN",
             color=GREEN,
-            hover_color=(100, 255, 100)
+            hover_color=(100, 255, 100),
+            font=self.font_manager.get_font('normal')
         )
         
         self.back_button = Button(
-            20,
+            padding,
             button_y,
-            120,
-            50,
+            button_width,
+            button_height,
             "ZURÜCK",
             color=RED,
-            hover_color=(255, 100, 100)
+            hover_color=(255, 100, 100),
+            font=self.font_manager.get_font('normal')
         )
         
         self.info_button = Button(
-            SCREEN_WIDTH - 140,
+            SCREEN_WIDTH - button_width - padding,
             button_y,
-            120,
-            50,
+            button_width,
+            button_height,
             "INFO",
             color=PURPLE,
-            hover_color=(180, 150, 255)
+            hover_color=(180, 150, 255),
+            font=self.font_manager.get_font('normal')
         )
         
-        # Create info box
+        # Create info box with responsive size
+        info_width = int(SCREEN_WIDTH * 0.5)  # 50% of screen width
+        info_height = int(SCREEN_HEIGHT * 0.6)  # 60% of screen height
         self.info_box = InfoBox(
-            SCREEN_WIDTH//2 - 200,
-            SCREEN_HEIGHT//2 - 150,
-            400,
-            300,
-            "Spielregeln"
+            SCREEN_WIDTH//2 - info_width//2,
+            SCREEN_HEIGHT//2 - info_height//2,
+            info_width,
+            info_height,
+            "Spielregeln",
+            font=self.font_manager.get_font('medium')
         )
         
         # Define colors for different challenge levels
@@ -294,25 +298,30 @@ class SlotMachine(BaseGame):
         # Draw background
         self.screen.fill(BLACK)
         
+        # Calculate responsive title position
+        title_y = int(SCREEN_HEIGHT * 0.1)  # 10% from top
+        
         # Draw title with glow effect
         title = self.title_font.render("Pokémon Card Challenge", True, GOLD)
-        title_rect = title.get_rect(center=(SCREEN_WIDTH//2, 50))
+        title_rect = title.get_rect(center=(SCREEN_WIDTH//2, title_y))
+        
+        # Add title glow effect
+        if self.glow_effect > 0:
+            glow_surface = pygame.Surface((title.get_width() + 20, title.get_height() + 20), pygame.SRCALPHA)
+            glow_color = (*GOLD, int(128 * (self.glow_effect / 30)))
+            pygame.draw.rect(glow_surface, glow_color, glow_surface.get_rect(), border_radius=10)
+            self.screen.blit(glow_surface, (title_rect.x - 10, title_rect.y - 10))
+        
         self.screen.blit(title, title_rect)
         
-        # Draw current challenge if exists
-        if self.current_challenge:
-            lines = self.current_challenge.split('\n')
-            y = SCREEN_HEIGHT - 150
-            for line in lines:
-                text = self.challenge_font.render(line, True, WHITE)
-                text_rect = text.get_rect(center=(SCREEN_WIDTH//2, y))
-                self.screen.blit(text, text_rect)
-                y += 30
+        # Calculate responsive slot positions
+        slot_size = int(min(SCREEN_WIDTH * 0.15, SCREEN_HEIGHT * 0.25))  # Responsive slot size
+        slot_spacing = int(slot_size * 1.2)  # Space between slots
+        slot_y = SCREEN_HEIGHT//2 - slot_size//2
         
         # Draw slot machine
-        slot_y = SCREEN_HEIGHT//2 - 65
         for i in range(3):
-            slot_x = SCREEN_WIDTH//2 + (i-1)*150
+            slot_x = SCREEN_WIDTH//2 + (i-1)*slot_spacing
             
             # Add shake effect
             if self.shake_offset:
@@ -322,21 +331,42 @@ class SlotMachine(BaseGame):
             # Draw slot background with glow effect
             glow_size = self.glow_effect if self.glow_effect > 0 else 0
             if glow_size:
-                glow_surface = pygame.Surface((140 + glow_size*2, 140 + glow_size*2), pygame.SRCALPHA)
-                pygame.draw.rect(glow_surface, (*GOLD, 128), glow_surface.get_rect(), border_radius=10)
+                glow_surface = pygame.Surface((slot_size + glow_size*2, slot_size + glow_size*2), pygame.SRCALPHA)
+                pygame.draw.rect(glow_surface, (*GOLD, 128), glow_surface.get_rect(), border_radius=15)
                 self.screen.blit(glow_surface, (slot_x-5-glow_size, slot_y-5-glow_size))
             
-            # Draw slot border
-            pygame.draw.rect(self.screen, WHITE, (slot_x-5, slot_y-5, 140, 140), border_radius=10)
-            pygame.draw.rect(self.screen, BLACK, (slot_x, slot_y, 130, 130), border_radius=8)
+            # Draw slot border with improved styling
+            pygame.draw.rect(self.screen, WHITE, (slot_x-5, slot_y-5, slot_size+10, slot_size+10), border_radius=15)
+            pygame.draw.rect(self.screen, BLACK, (slot_x, slot_y, slot_size, slot_size), border_radius=12)
             
-            # Draw sprite
+            # Draw sprite with proper scaling
             symbol = self.SYMBOLS[self.slots[i]]
             if symbol in self.sprites:
-                sprite = self.sprites[symbol]
-                self.screen.blit(sprite, (slot_x, slot_y))
+                sprite = pygame.transform.scale(self.sprites[symbol], (slot_size-20, slot_size-20))
+                sprite_rect = sprite.get_rect(center=(slot_x + slot_size//2, slot_y + slot_size//2))
+                self.screen.blit(sprite, sprite_rect)
         
-        # Draw buttons
+        # Draw current challenge with improved positioning
+        if self.current_challenge:
+            challenge_font = self.font_manager.get_font('medium')
+            lines = self.current_challenge.split('\n')
+            y = int(SCREEN_HEIGHT * 0.8)  # 80% down the screen
+            
+            # Add challenge text glow effect
+            for line in lines:
+                text = challenge_font.render(line, True, WHITE)
+                text_rect = text.get_rect(center=(SCREEN_WIDTH//2, y))
+                
+                if self.glow_effect > 0:
+                    glow_surface = pygame.Surface((text.get_width() + 10, text.get_height() + 10), pygame.SRCALPHA)
+                    glow_color = (255, 255, 255, int(64 * (self.glow_effect / 30)))
+                    pygame.draw.rect(glow_surface, glow_color, glow_surface.get_rect(), border_radius=5)
+                    self.screen.blit(glow_surface, (text_rect.x - 5, text_rect.y - 5))
+                
+                self.screen.blit(text, text_rect)
+                y += int(SCREEN_HEIGHT * 0.05)  # 5% spacing between lines
+        
+        # Draw UI elements
         self.spin_button.draw(self.screen)
         self.back_button.draw(self.screen)
         self.info_button.draw(self.screen)
@@ -353,21 +383,32 @@ class SlotMachine(BaseGame):
     
     def cleanup(self):
         """Cleanup resources when exiting the game"""
-        super().cleanup()
-        if hasattr(self, 'particle_system'):
-            self.particle_system.clear()
-        
-        # Clear sprite references
-        if hasattr(self, 'sprites'):
-            self.sprites.clear()
-        
-        # Clear particle system
-        if hasattr(self, 'particle_system'):
-            self.particle_system.particles.clear()
+        try:
+            # Stop any playing sounds first
+            if hasattr(self, 'sound_manager'):
+                self.sound_manager.stop_music()
+                
+            # Clear particle system
+            if hasattr(self, 'particle_system'):
+                self.particle_system.clear()
             
-        # Cleanup fonts
-        if hasattr(self, 'font_manager'):
-            self.font_manager.cleanup()
+            # Clear sprite references
+            if hasattr(self, 'sprites'):
+                self.sprites.clear()
+            
+            # Clear UI elements
+            if hasattr(self, 'info_box'):
+                self.info_box = None
+            
+            # Cleanup font manager last
+            if hasattr(self, 'font_manager'):
+                self.font_manager.cleanup()
+                
+            # Call parent cleanup
+            super().cleanup()
+            
+        except Exception as e:
+            print(f"Error during cleanup: {e}")
     
     def run(self):
         """Main game loop using parent's implementation"""

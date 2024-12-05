@@ -2,14 +2,14 @@ import pygame
 from utils.font_manager import FontManager
 
 class Button:
-    def __init__(self, x, y, width, height, text='', color=(170, 170, 170), hover_color=(200, 200, 200), text_color=(255, 255, 255)):
+    def __init__(self, x, y, width, height, text='', color=(170, 170, 170), hover_color=(200, 200, 200), text_color=(255, 255, 255), font=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.color = color
         self.hover_color = hover_color
         self.text = text
         self.text_color = text_color
         self.font_manager = FontManager()
-        self.font = self.font_manager.get_font('normal')  # Use normal size for buttons
+        self.font = font if font else self.font_manager.get_font('normal')  # Use provided font or default
         self.is_hovered = False
         self.disabled = False
         self.disabled_color = (100, 100, 100)
@@ -237,7 +237,7 @@ class PokemonTextBox:
         self.screen.blit(surface, (self.x, self.y))
 
 class InfoBox:
-    def __init__(self, x, y, width, height, title):
+    def __init__(self, x, y, width, height, title, font=None):
         self.x = x
         self.y = y
         self.width = width
@@ -248,6 +248,8 @@ class InfoBox:
         self.max_scroll = 0
         self.line_height = 25
         self.text_lines = []
+        self.font = font
+        self.font_manager = FontManager()
     
     def set_text(self, text_lines):
         """Set text content with color information"""
@@ -273,40 +275,28 @@ class InfoBox:
         """Update method for compatibility with slot machine"""
         pass
     
-    def draw(self, screen, font_manager):
-        """Draw the info box with title and colored text"""
+    def draw(self, screen, font_manager=None):
         if not self.visible:
             return
+            
+        # Use provided font or get default from font manager
+        title_font = self.font or self.font_manager.get_font('medium')
+        text_font = self.font or self.font_manager.get_font('normal')
         
-        # Create semi-transparent surface
-        surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-        pygame.draw.rect(surface, (0, 0, 0, 230), surface.get_rect(), border_radius=15)
+        # Draw box background
+        box_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        pygame.draw.rect(screen, (240, 240, 240, 230), box_rect)
+        pygame.draw.rect(screen, (0, 0, 0), box_rect, 2)
         
         # Draw title
-        title_font = font_manager.get_font('title')
-        title_surface = title_font.render(self.title, True, (255, 215, 0))  # Gold color
-        title_rect = title_surface.get_rect(centerx=self.width//2, top=10)
-        surface.blit(title_surface, title_rect)
+        title_surface = title_font.render(self.title, True, (0, 0, 0))
+        title_rect = title_surface.get_rect(centerx=self.x + self.width//2, top=self.y + 10)
+        screen.blit(title_surface, title_rect)
         
-        # Draw text lines
-        y_offset = 50 - self.scroll_offset  # Start below title
-        for line, color in self.text_lines:
-            if y_offset + self.line_height > 0 and y_offset < self.height:
-                if line:  # Only render non-empty lines
-                    font = font_manager.get_font('normal')
-                    text_surface = font.render(line, True, color)
-                    surface.blit(text_surface, (20, y_offset))
-            y_offset += self.line_height
-        
-        # Draw scroll indicators if needed
-        if self.scroll_offset > 0:
-            pygame.draw.polygon(surface, (255, 255, 255, 128), 
-                              [(self.width - 20, 20), (self.width - 10, 30), (self.width - 30, 30)])
-        if self.scroll_offset < self.max_scroll:
-            pygame.draw.polygon(surface, (255, 255, 255, 128), 
-                              [(self.width - 20, self.height - 20), 
-                               (self.width - 30, self.height - 30), 
-                               (self.width - 10, self.height - 30)])
-        
-        # Draw to screen
-        screen.blit(surface, (self.x, self.y))
+        # Draw text content
+        content_y = self.y + 50 - self.scroll_offset
+        for text, color in self.text_lines:
+            if content_y + self.line_height > self.y and content_y < self.y + self.height:
+                text_surface = text_font.render(text, True, color)
+                screen.blit(text_surface, (self.x + 20, content_y))
+            content_y += self.line_height
