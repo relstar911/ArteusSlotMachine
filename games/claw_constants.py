@@ -41,60 +41,60 @@ POKEBALLS = {
         'sprite': 'poke.png',
         'weight': 40,
         'category': 'easy',
-        'description': 'Standard Pokéball - Enthält normale Pokemon Karten aus Paldea',
+        'description': '📦 Standard Pokéball\n• Enthält normale Pokemon Karten\n• Idealer Einstieg für Sammler',
         'challenges': [
-            "Finde eine Common Karte aus Scarlet & Violet",
-            "Finde eine Energy Karte aus Paldea Evolved",
-            "Finde eine Trainer Karte aus Temporal Forces",
-            "Finde ein normales Pokémon aus Paldea"
+            "📄 Common Challenge:\n• Finde eine Common Karte aus Scarlet & Violet",
+            "⚡ Energy Challenge:\n• Finde eine Energy Karte aus Paldea Evolved",
+            "👥 Trainer Challenge:\n• Finde eine Trainer Karte aus Temporal Forces",
+            "🌟 Basic Challenge:\n• Finde ein normales Pokémon aus Paldea"
         ]
     },
     'hisuian': {
         'sprite': 'hisuian-great.png',
         'weight': 30,
         'category': 'medium',
-        'description': 'Hisui Ball - Enthält seltene Pokemon Karten aus Paldea',
+        'description': '🌟 Hisui Ball\n• Enthält seltene Pokemon Karten\n• Bessere Chance auf Holos',
         'challenges': [
-            "Finde eine Rare Holo Karte aus Scarlet & Violet",
-            "Finde eine Stage 1 ex Karte aus Paldea Evolved",
-            "Finde eine Teracristall Karte aus Temporal Forces",
-            "Finde ein Paradox Pokémon aus Paldea"
+            "✨ Holo Challenge:\n• Finde eine Rare Holo Karte aus Scarlet & Violet",
+            "⭐ Stage 1 Challenge:\n• Finde eine Stage 1 ex Karte aus Paldea Evolved",
+            "💎 Tera Challenge:\n• Finde eine Teracristall Karte aus Temporal Forces",
+            "🌈 Paradox Challenge:\n• Finde ein Paradox Pokémon aus Paldea"
         ]
     },
     'ultra': {
         'sprite': 'ultra.png',
         'weight': 20,
         'category': 'hard',
-        'description': 'Ultra Ball - Enthält sehr seltene Pokemon Karten aus Paldea',
+        'description': '💫 Ultra Ball\n• Enthält sehr seltene Karten\n• Hohe Chance auf Ultra Rares',
         'challenges': [
-            "Finde eine Ultra Rare ex Karte aus Scarlet & Violet",
-            "Finde eine Full Art Trainer Karte aus Paldea Evolved",
-            "Finde eine Ancient/Future Karte aus Temporal Forces",
-            "Finde ein legendäres Pokémon aus Paldea"
+            "⭐ Ultra Rare Challenge:\n• Finde eine Ultra Rare ex Karte aus Scarlet & Violet",
+            "👤 Full Art Challenge:\n• Finde eine Full Art Trainer Karte aus Paldea Evolved",
+            "🎨 Ancient Challenge:\n• Finde eine Ancient/Future Karte aus Temporal Forces",
+            "🌟 Legend Challenge:\n• Finde ein legendäres Pokémon aus Paldea"
         ]
     },
     'beast': {
         'sprite': 'beast.png',
         'weight': 7,
         'category': 'special',
-        'description': 'Beast Ball - Spezielle Event Karten aus Paldea!',
+        'description': '🎭 Beast Ball\n• Enthält spezielle Event Karten\n• Sehr hohe Chance auf Alt Arts',
         'challenges': [
-            "Finde eine Special Illustration Rare ex aus Scarlet & Violet",
-            "Finde eine Alternative Art Rare aus Paldea Evolved",
-            "Finde eine Shiny Rare aus Temporal Forces",
-            "Finde ein Paradox ex Pokémon aus Paldea"
+            "🖼️ Special Art Challenge:\n• Finde eine Special Illustration Rare ex aus Scarlet & Violet",
+            "🎨 Alt Art Challenge:\n• Finde eine Alternative Art Rare aus Paldea Evolved",
+            "✨ Shiny Challenge:\n• Finde eine Shiny Rare aus Temporal Forces",
+            "🌈 Paradox EX Challenge:\n• Finde ein Paradox ex Pokémon aus Paldea"
         ]
     },
     'master': {
         'sprite': 'master.png',
         'weight': 3,
         'category': 'jackpot',
-        'description': 'Master Ball - Community Jackpot!',
+        'description': '🏆 Master Ball\n• Community Jackpot Ball!\n• Garantierte Top-Preise',
         'challenges': [
-            "Gewinne eine signierte Koraidon ex Karte! ",
-            "Gewinne eine PSA 10 Miraidon ex Karte! ",
-            "Gewinne ein komplettes Master-Set von Scarlet & Violet! ",
-            "Gewinne ein Jahr gratis Pokémon TCG Live Premium Pass! "
+            "💫 JACKPOT CHALLENGE!\n• Gewinne eine signierte Koraidon ex Karte!",
+            "🌟 JACKPOT CHALLENGE!\n• Gewinne eine PSA 10 Miraidon ex Karte!",
+            "✨ JACKPOT CHALLENGE!\n• Gewinne ein komplettes Master-Set von Scarlet & Violet!",
+            "🎮 JACKPOT CHALLENGE!\n• Gewinne ein Jahr gratis Pokémon TCG Live Premium Pass!"
         ]
     }
 }

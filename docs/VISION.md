@@ -1,125 +1,104 @@
-# 🎮 Pokemon Card Channel Mini-Games Vision
+# 🎮 Pokemon Content Creator Challenge Generator
 
 ## 🌟 Core Vision
-Ein interaktives Mini-Game-System, das YouTube Shorts und Pokemon-Karten-Challenges nahtlos verbindet, um eine engagierte Community aufzubauen und Zuschauer durch spannende Belohnungen an den Kanal zu binden.
+Ein innovatives Tool für Pokemon Content Creator, das durch interaktive Mini-Games spannende Video-Challenges generiert und die Community durch ein cleveres Belohnungssystem einbindet. Die generierten Challenges führen zu echten Produkt-Openings und Community-Events.
 
 ## 🎯 Hauptziele
 
-### 1. Community Engagement
-- **Interaktive Challenges**
-  - QR-Code Integration für exklusive In-Game Events
-  - Live-Stream kompatible Challenges
-  - Community-Voting für neue Features
+### 1. Content Generation
+- **Challenge System**
+  - Automatische Generierung von Opening-Challenges
+  - Verschiedene Challenge-Typen (Booster, Merchandise, etc.)
+  - Skalierbare Schwierigkeitsgrade
 
-- **Reward System**
-  - Gestaffelte Belohnungen nach Schwierigkeitsgrad
-  - Saisonale Events mit speziellen Preisen
-  - Community Milestones mit Bonus-Rewards
+- **Video Integration**
+  - Nahtlose Einbindung in YouTube/Stream Formate
+  - Vorlagen für Thumbnail-Generierung
+  - Clip-würdige Momente durch Specials
 
-### 2. Content Creation
-- **YouTube Integration**
-  - Automatische Highlight-Generierung für Shorts
-  - Stream-Overlay Kompatibilität
-  - Interaktive Zuschauer-Challenges
+### 2. Community Engagement
+- **Belohnungssystem**
+  - Bei normalen Gewinnen → Creator Challenge
+  - Bei seltenen Gewinnen → Community Belohnung
+  - Bei Ultra-Rare → Special Community Event
 
-- **Social Media**
-  - Teilbare Erfolge und Highscores
-  - Community Challenge Leaderboards
-  - Discord Bot Integration
+- **Event Integration**
+  - Live-Stream Events mit Chat-Interaktion
+  - Community Voting für Challenge-Modifier
+  - Special Events bei Kanal-Milestones
 
 ### 3. Spielmechaniken
 
 #### 🎰 Slot Machine
-- **Challenge System**
-  - Easy: Normale Pokemon-Karten Sets
-  - Medium: Spezielle Promo-Karten
-  - Hard: Vintage und rare Karten
-  - Jackpot: Ultra-rare Karten und Community Events
+- **Challenge Generator**
+  - Normal: Standard Set Openings
+  - Selten: Vintage/Special Sets
+  - Ultra Selten: Community Belohnung
+  - Jackpot: Community Event
 
-- **Feature Erweiterungen**
-  - Bonus-Runden mit speziellen Regeln
-  - Multiplier-System für Combos
-  - Tägliche/Wöchentliche Challenges
+- **Challenge Variationen**
+  - Set-spezifische Challenges
+  - Mix-and-Match Openings
+  - Limited Edition Events
 
 #### 🎮 Claw Machine
-- **Pokeball System**
-  - Normal Ball: Common Karten (80% Chance)
-  - Great Ball: Uncommon Karten (60% Chance)
-  - Ultra Ball: Rare Karten (40% Chance)
-  - Master Ball: Ultra Rare (20% Chance)
-  - Beast Ball: Special Cards (10% Chance)
+- **Merchandise Challenges**
+  - Normal: Standard Merchandise
+  - Selten: Premium Merchandise
+  - Ultra Selten: Community Gewinn
+  - Special: Event Merchandise
 
-- **Gameplay Evolution**
-  - Skill-basierte Bonus-Features
-  - Power-Ups und Spezial-Items
-  - Zeitlimitierte Event-Challenges
+- **Challenge Features**
+  - Verschiedene Merchandise-Kategorien
+  - Spezielle Event-Items
+  - Community Choice Items
 
 ### 4. Technische Vision
 
-#### Performance
-- **Optimierung**
-  - 60 FPS auf allen Systemen
-  - Schnelle Ladezeiten
-  - Effizientes Asset-Management
+#### Creator Tools
+- **Challenge Management**
+  - Challenge-Tracking System
+  - Content-Planungs Tools
+  - Event-Kalendar Integration
 
-- **Skalierbarkeit**
-  - Modulares Design für neue Spiele
-  - Erweiterbare Challenge-Systeme
-  - Flexibles Reward-Management
+- **Community Features**
+  - Belohnungs-Tracking
+  - Event-Planung
+  - Community-Statistiken
 
 #### UI/UX
-- **Design**
-  - Moderne, Pokemon-inspirierte Ästhetik
-  - Responsive Animationen
-  - Barrierefreie Bedienung
+- **Stream Integration**
+  - Overlay-kompatibles Design
+  - Szenen-Integration
+  - Alert-System für Gewinne
 
-- **Sound**
-  - Dynamisches Soundsystem
-  - Stimmungsvolle Hintergrundmusik
-  - Reaktive Soundeffekte
+- **Branding**
+  - Anpassbare Farben/Themes
+  - Channel-Integration
+  - Export-Funktionen
 
 ## 🚀 Entwicklungs-Roadmap
 
-### Phase 1: Foundation (Aktuell)
+### Phase 1: Foundation (Abgeschlossen)
 - ✅ Basis-Spielmechaniken
-- ✅ Grundlegendes UI-System
-- ✅ Sound-Integration
-- ⏳ Asset-Management
+- ✅ Challenge-System
+- ✅ Belohnungssystem
+- ✅ UI-Grundlagen
 
-### Phase 2: Enhancement
-- 🎯 Erweitertes Challenge-System
-- 🎯 Community-Features
-- 🎯 Performance-Optimierung
-- 🎯 UI/UX Verfeinerung
+### Phase 2: Creator Tools (Aktuell)
+- ⏳ Challenge Management
+- ⏳ Event-System
+- ⏳ Stream Integration
+- ⏳ Export-Funktionen
 
-### Phase 3: Integration
-- 📱 Social Media Anbindung
-- 📺 YouTube API Integration
-- 🎮 Stream-Overlay System
-- 🤖 Discord Bot
+### Phase 3: Community Features
+- 🎯 Belohnungs-Portal
+- 🎯 Event-Kalender
+- 🎯 Statistik-System
+- 🎯 Community-Dashboard
 
-### Phase 4: Evolution
-- 🌟 Neue Spielmodi
-- 🏆 Turnier-System
-- 🌐 Online-Features
-- 📊 Analytics & Tracking
-
-## 📈 Erfolgskriterien
-
-### Kurzfristig
-- Stabile Performance
-- Intuitive Bedienung
-- Fehlerfreies Gameplay
-- Positive User-Feedback
-
-### Mittelfristig
-- Wachsende Community
-- Steigende Engagement-Raten
-- Erfolgreiche YouTube-Integration
-- Regelmäßige Content-Generierung
-
-### Langfristig
-- Aktive Community-Beteiligung
-- Virale Shorts/Clips
-- Etablierte Markenidentität
-- Nachhaltiges Kanalwachstum
+### Phase 4: Integration
+- 📺 YouTube/Twitch API
+- 🎥 Clip-Generierung
+- 🏆 Achievement-System
+- 📊 Analytics-Tools

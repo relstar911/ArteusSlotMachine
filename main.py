@@ -92,104 +92,43 @@ class MainMenu:
 def main():
     pygame.init()
     pygame.display.set_caption("Pokemon Card Games")
+    screen = pygame.display.set_mode((800, 600))
     
-    menu = None
+    menu = MainMenu(screen)
     slot_machine = None
     claw_machine = None
-    screen = None
+    current_screen = "menu"
     
     try:
-        # Set up the display
-        screen = pygame.display.set_mode((800, 600))
-        current_screen = "menu"
-        
-        # Create game states
-        menu = MainMenu(screen)
-        
         # Main game loop
         running = True
         while running:
-            try:
-                if current_screen == "menu":
-                    current_screen = menu.run()
-                elif current_screen == "slot":
-                    if slot_machine is None:
-                        slot_machine = SlotMachine(screen)
-                    current_screen = slot_machine.run()
-                    if current_screen != "slot":
-                        if slot_machine:
-                            try:
-                                slot_machine.cleanup()
-                            except Exception as e:
-                                print(f"Error cleaning up slot machine: {e}")
-                        slot_machine = None
-                elif current_screen == "claw":
-                    if claw_machine is None:
-                        claw_machine = ClawMachine(screen)
-                    current_screen = claw_machine.run()
-                    if current_screen != "claw":
-                        if claw_machine:
-                            try:
-                                claw_machine.cleanup()
-                            except Exception as e:
-                                print(f"Error cleaning up claw machine: {e}")
-                        claw_machine = None
-                elif current_screen == "quit":
-                    running = False
-                    break
-            except Exception as e:
-                print(f"Error in game loop: {e}")
-                current_screen = "menu"
-                if slot_machine:
-                    try:
-                        slot_machine.cleanup()
-                    except Exception as e:
-                        print(f"Error cleaning up slot machine: {e}")
+            if current_screen == "menu":
+                current_screen = menu.run()
+            elif current_screen == "slot":
+                if slot_machine is None:
+                    slot_machine = SlotMachine(screen)
+                current_screen = slot_machine.run()
+                if current_screen != "slot":
                     slot_machine = None
-                if claw_machine:
-                    try:
-                        claw_machine.cleanup()
-                    except Exception as e:
-                        print(f"Error cleaning up claw machine: {e}")
+            elif current_screen == "claw":
+                if claw_machine is None:
+                    claw_machine = ClawMachine(screen)
+                current_screen = claw_machine.run()
+                if current_screen != "claw":
                     claw_machine = None
+            elif current_screen == "quit":
+                running = False
+            
+            # Small delay to prevent high CPU usage
+            pygame.time.wait(10)
     
     except Exception as e:
         print(f"Critical error: {e}")
     
     finally:
-        # Cleanup in reverse order of creation
-        if claw_machine:
-            try:
-                claw_machine.cleanup()
-            except Exception as e:
-                print(f"Final claw machine cleanup error: {e}")
-        
-        if slot_machine:
-            try:
-                slot_machine.cleanup()
-            except Exception as e:
-                print(f"Final slot machine cleanup error: {e}")
-        
-        if menu:
-            try:
-                if hasattr(menu, 'cleanup'):
-                    menu.cleanup()
-            except Exception as e:
-                print(f"Final menu cleanup error: {e}")
-        
-        # Quit pygame
-        try:
-            pygame.quit()
-        except Exception as e:
-            print(f"Error quitting pygame: {e}")
-        
-        # Give pygame time to clean up
-        try:
-            time.sleep(0.1)
-        except:
-            pass
-        
-        # Exit
+        # Final cleanup
+        pygame.quit()
         sys.exit(0)
 
 if __name__ == "__main__":

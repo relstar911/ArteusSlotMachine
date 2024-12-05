@@ -134,27 +134,34 @@ class SlotMachine(BaseGame):
         
         # Set info text with colors
         self.info_box.set_text([
-            ("Kombinationen & Challenges:", white),
-            ("", white),  # Empty line for spacing
-            ("Easy Challenge:", easy_color),
-            ("• 1x gleiche Symbole", easy_color),
+            ("🎰 SLOT MACHINE REGELN", jackpot_color),
             ("", white),
-            ("Medium Challenge:", medium_color),
-            ("• 2x gleiche Symbole", medium_color),
+            ("🎯 STEUERUNG", white),
+            ("• SPACE: Drehen der Walzen", (200, 200, 200)),
+            ("• PFEILTASTEN: Walzen stoppen", (200, 200, 200)),
+            ("• ESC: Spiel beenden", (200, 200, 200)),
             ("", white),
-            ("Hard Challenge:", hard_color),
-            ("• 3x gleiche Symbole", hard_color),
+            ("💫 BELOHNUNGEN", white),
+            ("• 1x Symbol = Easy Challenge", easy_color),
+            ("  Common & Stage 1 Karten", (200, 200, 200)),
+            ("• 2x Symbol = Medium Challenge", medium_color),
+            ("  Holo & Full Art Karten", (200, 200, 200)),
+            ("• 3x Symbol = Hard Challenge", hard_color),
+            ("  Special Art & Gold Karten", (200, 200, 200)),
             ("", white),
-            ("✨ COMMUNITY JACKPOT ✨", jackpot_color),
-            ("• 3x Lugia", jackpot_color),
+            ("🏆 COMMUNITY JACKPOT", jackpot_color),
+            ("• 3x Lugia = Jackpot", (255, 223, 0)),
+            ("• Gewinne exklusive Community", (255, 223, 0)),
+            ("  Presents als Belohnung!", (255, 223, 0)),
             ("", white),
-            ("Drücke DREHEN um zu starten!", white)
+            ("💡 TIPP", white),
+            ("Stoppe die Walzen im richtigen", (200, 200, 200)),
+            ("Moment für bessere Chancen!", (200, 200, 200))
         ])
 
     def process_event(self, event):
         if event.type == pygame.QUIT:
-            self.running = False
-            self.sound_manager.stop_music()
+            self.cleanup()
             return "quit"
             
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -163,8 +170,8 @@ class SlotMachine(BaseGame):
                     if not self.rolling:
                         self.start_spin()
                 elif self.back_button.handle_event(event):
+                    self.cleanup_to_menu()
                     self.running = False
-                    self.sound_manager.stop_music()
                     return "menu"
                 elif self.info_button.handle_event(event):
                     self.info_box.toggle()
@@ -185,8 +192,8 @@ class SlotMachine(BaseGame):
                 if self.info_box.visible:
                     self.info_box.visible = False
                 else:
+                    self.cleanup_to_menu()
                     self.running = False
-                    self.sound_manager.stop_music()
                     return "menu"
             elif event.key == pygame.K_SPACE and not self.rolling:
                 self.start_spin()
@@ -232,10 +239,10 @@ class SlotMachine(BaseGame):
             symbol = [s for s, count in symbol_counts.items() if count == 3][0]
             if symbol == 'Lugia':  # Jackpot
                 jackpot_challenges = [
-                    "✨ COMMUNITY JACKPOT! ✨\nEin glücklicher Zuschauer gewinnt ein Display aus der neuesten Edition!",
-                    "✨ COMMUNITY JACKPOT! ✨\nEin glücklicher Zuschauer gewinnt eine Special Illustration Rare ex seiner Wahl!",
-                    "✨ COMMUNITY JACKPOT! ✨\nEin glücklicher Zuschauer gewinnt ein Booster Display aus {set}!",
-                    "✨ COMMUNITY JACKPOT! ✨\nEin glücklicher Zuschauer gewinnt eine Rare Karte seiner Wahl!"
+                    "🏆 COMMUNITY JACKPOT!\n• Ein glücklicher Zuschauer gewinnt ein Display aus der neuesten Edition!\n• Viel Glück an alle!",
+                    "🌟 COMMUNITY JACKPOT!\n• Ein glücklicher Zuschauer gewinnt eine Special Illustration Rare ex!\n• Freie Kartenwahl!",
+                    "✨ COMMUNITY JACKPOT!\n• Ein glücklicher Zuschauer gewinnt ein Booster Display aus {set}!\n• Brandneue Edition!",
+                    "💫 COMMUNITY JACKPOT!\n• Ein glücklicher Zuschauer gewinnt eine Rare Karte!\n• Freie Auswahl garantiert!"
                 ]
                 self.current_challenge = random.choice(jackpot_challenges).format(set=random.choice(BOOSTER_SETS))
                 self.sound_manager.play_sound('jackpot')
@@ -350,13 +357,23 @@ class SlotMachine(BaseGame):
         if self.current_challenge:
             challenge_font = self.font_manager.get_font('medium')
             lines = self.current_challenge.split('\n')
-            y = int(SCREEN_HEIGHT * 0.8)  # 80% down the screen
             
-            # Add challenge text glow effect
-            for line in lines:
-                text = challenge_font.render(line, True, WHITE)
-                text_rect = text.get_rect(center=(SCREEN_WIDTH//2, y))
+            # Calculate total height needed
+            total_height = len(lines) * int(SCREEN_HEIGHT * 0.05)  # 5% spacing between lines
+            start_y = int(SCREEN_HEIGHT * 0.75) - total_height // 2  # Center vertically in bottom quarter
+            
+            # Draw each line with proper spacing and effects
+            for i, line in enumerate(lines):
+                # Größere Schrift für Überschriften (erste Zeile jeder Challenge)
+                if i == 0:
+                    text = self.font_manager.get_font('subtitle').render(line, True, GOLD)
+                # Kleinere Schrift für Details (mit Aufzählungszeichen)
+                else:
+                    text = challenge_font.render(line, True, WHITE)
                 
+                text_rect = text.get_rect(center=(SCREEN_WIDTH//2, start_y + i * int(SCREEN_HEIGHT * 0.05)))
+                
+                # Add glow effect for important text
                 if self.glow_effect > 0:
                     glow_surface = pygame.Surface((text.get_width() + 10, text.get_height() + 10), pygame.SRCALPHA)
                     glow_color = (255, 255, 255, int(64 * (self.glow_effect / 30)))
@@ -364,7 +381,6 @@ class SlotMachine(BaseGame):
                     self.screen.blit(glow_surface, (text_rect.x - 5, text_rect.y - 5))
                 
                 self.screen.blit(text, text_rect)
-                y += int(SCREEN_HEIGHT * 0.05)  # 5% spacing between lines
         
         # Draw UI elements
         self.spin_button.draw(self.screen)
@@ -382,34 +398,25 @@ class SlotMachine(BaseGame):
         pygame.display.flip()
     
     def cleanup(self):
-        """Cleanup resources when exiting the game"""
+        """Clean up resources before closing completely"""
         try:
-            # Stop any playing sounds first
+            if hasattr(self, 'info_box'):
+                self.info_box.visible = False
             if hasattr(self, 'sound_manager'):
                 self.sound_manager.stop_music()
-                
-            # Clear particle system
-            if hasattr(self, 'particle_system'):
-                self.particle_system.clear()
-            
-            # Clear sprite references
-            if hasattr(self, 'sprites'):
-                self.sprites.clear()
-            
-            # Clear UI elements
-            if hasattr(self, 'info_box'):
-                self.info_box = None
-            
-            # Cleanup font manager last
-            if hasattr(self, 'font_manager'):
-                self.font_manager.cleanup()
-                
-            # Call parent cleanup
-            super().cleanup()
-            
         except Exception as e:
             print(f"Error during cleanup: {e}")
-    
+
+    def cleanup_to_menu(self):
+        """Clean up resources when returning to menu"""
+        try:
+            if hasattr(self, 'info_box'):
+                self.info_box.visible = False
+            if hasattr(self, 'sound_manager'):
+                self.sound_manager.stop_music()
+        except Exception as e:
+            print(f"Error during cleanup: {e}")
+
     def run(self):
         """Main game loop using parent's implementation"""
         self.running = True
@@ -419,7 +426,7 @@ class SlotMachine(BaseGame):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.cleanup()
-                    return None
+                    return "quit"
                 
                 result = self.process_event(event)
                 if result:
@@ -432,5 +439,8 @@ class SlotMachine(BaseGame):
             self.draw()
             self.clock.tick(self.FPS)
         
-        self.cleanup()
-        return result or "menu"
+        if result == "menu":
+            self.cleanup_to_menu()
+        else:
+            self.cleanup()
+        return result

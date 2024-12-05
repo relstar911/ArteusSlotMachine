@@ -76,9 +76,10 @@ class SoundManager:
             print(f"Error playing music {name}: {e}")
     
     def stop_music(self):
-        """Stop currently playing music"""
+        """Stop the currently playing music"""
         try:
-            pygame.mixer.music.stop()
+            if pygame.mixer.get_init():
+                pygame.mixer.music.stop()
         except Exception as e:
             print(f"Error stopping music: {e}")
     

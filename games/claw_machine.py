@@ -205,26 +205,32 @@ class ClawMachine(BaseGame):
         
         # Set info text with colors
         self.info_box.set_text([
-            ("Steuerung:", white),
-            ("• Pfeiltasten: Bewegung der Klaue", white),
-            ("• Leertaste: Klaue senken", white),
-            ("• ESC: Spiel beenden", white),
-            ("", white),  # Empty line
-            ("Pokébälle & Chancen:", white),
-            ("• Normal Ball: 50% Fangchance", normal_color),
-            ("• Hisui Ball: 65% Fangchance", hisui_color),
-            ("• Ultra Ball: 75% Fangchance", ultra_color),
-            ("• Beast Ball: 85% Fangchance", beast_color),
-            ("• Master Ball: 100% Fangchance", master_color),
-            ("", white),  # Empty line
-            ("Spielablauf:", white),
-            ("1. Bewege die Klaue über den Ball", white),
-            ("2. Drücke Leertaste zum Greifen", white),
-            ("3. Die Klaue senkt sich automatisch", white),
-            ("4. Fangchance basiert auf Balltyp", white),
-            ("5. Erfolgreiche Fänge = Punkte!", white),
-            ("", white),  # Empty line
-            ("Tipp: Time deinen Griff genau!", white)
+            ("🎮 CLAW MACHINE REGELN", (255, 215, 0)),
+            ("", (255, 255, 255)),
+            ("🎯 SPIELABLAUF", (255, 215, 0)),
+            ("• Bewege den Greifer mit den PFEILTASTEN", (255, 255, 255)),
+            ("• Drücke SPACE zum Greifen", (255, 255, 255)),
+            ("• Fange Pokebälle für Belohnungen", (255, 255, 255)),
+            ("", (255, 255, 255)),
+            ("⚡ POKEBÄLLE", (255, 215, 0)),
+            ("• POKEBALL: Common bis Stage 1 Karten", (255, 100, 100)),
+            ("• SUPERBALL: Holo bis Full Art Karten", (100, 100, 255)),
+            ("• HYPERBALL: Special Art bis Gold Karten", (150, 150, 150)),
+            ("• MEISTERBALL: Community Present", (255, 215, 0)),
+            ("", (255, 255, 255)),
+            ("💫 POWER-UPS", (255, 215, 0)),
+            ("• Sammle Items für bessere Greifkraft", (255, 255, 255)),
+            ("• Mehr Greifkraft = Bessere Bälle", (255, 255, 255)),
+            ("", (255, 255, 255)),
+            ("🎮 Spielablauf", (255, 215, 0)),
+            ("1. Bewege die Klaue über den Ball", (255, 255, 255)),
+            ("2. Drücke Leertaste zum Greifen", (255, 255, 255)),
+            ("3. Die Klaue senkt sich automatisch", (255, 255, 255)),
+            ("4. Fangchance basiert auf Balltyp", (255, 255, 255)),
+            ("5. Erfolgreiche Fänge = Punkte!", (255, 255, 255)),
+            ("", (255, 255, 255)),
+            ("💡 Profi-Tipp", (255, 215, 0)),
+            ("Time deinen Griff genau!", (255, 255, 255))
         ])
         
         # Create buttons
@@ -511,26 +517,32 @@ class ClawMachine(BaseGame):
                         elif button_name == 'info':
                             self.info_box.visible = True
                             self.info_box.set_text([
-                                ("Steuerung:", (255, 255, 255)),
-                                ("• Pfeiltasten: Bewegung der Klaue", (255, 255, 255)),
-                                ("• Leertaste: Klaue senken", (255, 255, 255)),
-                                ("• ESC: Spiel beenden", (255, 255, 255)),
-                                ("", (255, 255, 255)),  # Empty line
-                                ("Pokébälle & Chancen:", (255, 255, 255)),
-                                ("• Normal Ball: 50% Fangchance", (255, 100, 100)),
-                                ("• Hisui Ball: 65% Fangchance", (100, 100, 255)),
-                                ("• Ultra Ball: 75% Fangchance", (150, 150, 150)),
-                                ("• Beast Ball: 85% Fangchance", (147, 112, 219)),
-                                ("• Master Ball: 100% Fangchance", (255, 215, 0)),
-                                ("", (255, 255, 255)),  # Empty line
-                                ("Spielablauf:", (255, 255, 255)),
+                                ("🎮 CLAW MACHINE REGELN", (255, 215, 0)),
+                                ("", (255, 255, 255)),
+                                ("🎯 SPIELABLAUF", (255, 215, 0)),
+                                ("• Bewege den Greifer mit den PFEILTASTEN", (255, 255, 255)),
+                                ("• Drücke SPACE zum Greifen", (255, 255, 255)),
+                                ("• Fange Pokebälle für Belohnungen", (255, 255, 255)),
+                                ("", (255, 255, 255)),
+                                ("⚡ POKEBÄLLE", (255, 215, 0)),
+                                ("• POKEBALL: Common bis Stage 1 Karten", (255, 100, 100)),
+                                ("• SUPERBALL: Holo bis Full Art Karten", (100, 100, 255)),
+                                ("• HYPERBALL: Special Art bis Gold Karten", (150, 150, 150)),
+                                ("• MEISTERBALL: Community Present", (255, 215, 0)),
+                                ("", (255, 255, 255)),
+                                ("💫 POWER-UPS", (255, 215, 0)),
+                                ("• Sammle Items für bessere Greifkraft", (255, 255, 255)),
+                                ("• Mehr Greifkraft = Bessere Bälle", (255, 255, 255)),
+                                ("", (255, 255, 255)),
+                                ("🎮 Spielablauf", (255, 215, 0)),
                                 ("1. Bewege die Klaue über den Ball", (255, 255, 255)),
                                 ("2. Drücke Leertaste zum Greifen", (255, 255, 255)),
                                 ("3. Die Klaue senkt sich automatisch", (255, 255, 255)),
                                 ("4. Fangchance basiert auf Balltyp", (255, 255, 255)),
                                 ("5. Erfolgreiche Fänge = Punkte!", (255, 255, 255)),
-                                ("", (255, 255, 255)),  # Empty line
-                                ("Tipp: Time deinen Griff genau!", (255, 255, 255))
+                                ("", (255, 255, 255)),
+                                ("💡 Profi-Tipp", (255, 215, 0)),
+                                ("Time deinen Griff genau!", (255, 255, 255))
                             ])
     
         # Update button hover states

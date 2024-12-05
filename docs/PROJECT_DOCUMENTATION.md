@@ -1,122 +1,104 @@
-# 🎮 Pokémon Card Games Project Documentation
+# 🎮 Pokemon Content Creator Challenge Generator - Technische Dokumentation
 
-## 📋 Project Overview
-A Python-based gaming application featuring two main games:
-1. Pokémon Slot Machine
-2. Pokémon Claw Machine
+## 📋 Projekt-Übersicht
+Ein Python-basiertes Tool für Content Creator, das durch interaktive Minispiele automatisch Challenges für Pokemon-bezogene Videos generiert:
+1. Booster Opening Challenges (Slot Machine)
+2. Merchandise Opening Challenges (Claw Machine)
 
-## 📁 Project Structure
+## 📁 Projektstruktur
 
 ### Core Files
-- `main.py` - Main entry point, handles game state management and screen transitions
-- `requirements.txt` - Project dependencies
+- `main.py` - Hauptprogramm, verwaltet Spielzustände und Challenge-Generierung
+- `requirements.txt` - Projektabhängigkeiten
 
 ### Utilities (`/utils`)
-- `font_manager.py` - Manages font loading and rendering with consistent sizes
-- `ui_elements.py` - Common UI components (buttons, info boxes, particles)
-- `game_base.py` - Base game class with common functionality
-- `sound_manager.py` - Handles sound effects and music
-- `constants.py` - Global constants and settings
+- `font_manager.py` - Schriftarten-Management für Stream-kompatible Darstellung
+- `ui_elements.py` - Stream-optimierte UI-Komponenten
+- `game_base.py` - Basis-Klasse mit Challenge-Logik
+- `sound_manager.py` - Sound-System für Streams
+- `constants.py` - Globale Einstellungen
 
 ### Games (`/games`)
-- `slot_machine.py` - Slot machine game implementation
-- `claw_machine.py` - Claw machine game implementation
-- `constants.py` - Game-specific constants
+- `slot_machine.py` - Booster Pack Challenge Generator
+- `claw_machine.py` - Merchandise Challenge Generator
+- `constants.py` - Spiel-spezifische Konstanten
 
 ### Documentation (`/docs`)
-- `VISION.md` - Project vision and long-term goals
-- `PROJECT_DOCUMENTATION.md` - Technical documentation and current state
-- `CHANGELOG.md` - Version history and changes
+- `VISION.md` - Projektvision und Langzeitziele
+- `PROJECT_DOCUMENTATION.md` - Technische Dokumentation
+- `CHANGELOG.md` - Versionshistorie
 
 ## 🎯 Implementierte Features
 
-### 🎰 Slot Machine
-- **Grundlegendes Gameplay**
-  - Funktionierendes Spin-System mit Animation
-  - Challenge-basierte Belohnungen
-  - Visuelles Feedback durch UI-Elemente
+### 🎰 Slot Machine (Booster Challenge Generator)
+- **Challenge-System**
+  - Automatische Generierung von Pack-Opening Challenges
+  - Verschiedene Set-Kategorien (Standard, Vintage, Special)
+  - Community-Belohnungen bei seltenen Ergebnissen
 
-- **UI/UX**
-  - Info-Box mit Spielregeln und Steuerung
-  - Farbcodierte Buttons und Text
-  - Responsive Button-Hover-Effekte
+- **Creator Features**
+  - Stream-optimierte Overlays
+  - Exportierbare Challenge-Details
+  - Anpassbare Wahrscheinlichkeiten
 
-### 🎮 Claw Machine
-- **Gameplay-Mechaniken**
-  - Keyboard-basierte Steuerung (Pfeiltasten + Leertaste)
-  - Verschiedene Pokeball-Typen mit unterschiedlichen Fangchancen
-  - Partikeleffekte für visuelles Feedback
+### 🎮 Claw Machine (Merchandise Challenge Generator)
+- **Challenge-System**
+  - Merchandise-basierte Opening Challenges
+  - Verschiedene Produkt-Kategorien
+  - Community-Belohnungen bei Spezial-Items
 
-- **UI/UX**
-  - Info-Box mit detaillierten Spielanweisungen
-  - Farbcodierte Pokebälle und Challenges
-  - Klare visuelle Rückmeldung bei Aktionen
+- **Creator Features**
+  - Anpassbare Produkt-Pools
+  - Stream-Integration
+  - Challenge-Tracking
 
-## 🛠️ Gemeinsame Komponenten
+## 🛠️ Creator Tools
 
-### UI-System
-- **FontManager**
-  - Zentralisierte Schriftartverwaltung
-  - Pokemon-Style Fonts für authentisches Look & Feel
-  - Fallback auf Standard-Fonts bei Bedarf
+### Challenge Management
+- **Generator-System**
+  - Regelbasierte Challenge-Erstellung
+  - Schwierigkeitsgrad-Anpassung
+  - Event-Integration
 
-- **InfoBox**
-  - Einheitliches Design über alle Spiele
-  - Scrollbare Text-Anzeige
-  - Toggle-Funktion (ESC)
-  - Farbcodierte Textdarstellung
+- **Content Planung**
+  - Challenge-Tracking
+  - Event-Kalender
+  - Content-Vorlagen
 
-### Sound-System
-- **SoundManager**
-  - Zentrale Verwaltung von Soundeffekten
-  - Hintergrundmusik-Steuerung
-  - Dynamische Lautstärkeanpassung
+### Stream Integration
+- **Overlay-System**
+  - Einheitliches Design
+  - Scene-Integration
+  - Alert-System
 
-### Event-System
-- **Einheitliche Event-Verarbeitung**
-  - Konsistente Quit-Event-Behandlung
-  - Cleanup-Routinen für ressourcenschonenden Exit
-  - Error-Handling und Logging
+### Community Features
+- **Belohnungssystem**
+  - Tracking von Community-Rewards
+  - Event-Management
+  - Statistik-Export
 
 ## 🐛 Bekannte Probleme & Lösungen
 
 ### Gelöste Issues
-1. **Info-Box Konsistenz**
-   - Problem: Unterschiedliches Verhalten in Spielen
-   - Lösung: Vereinheitlichtes Info-Box-System
+1. **Challenge Konsistenz**
+   - Problem: Inkonsistente Challenge-Generierung
+   - Lösung: Standardisiertes Challenge-Format
 
-2. **Sound-Management**
-   - Problem: Fehlende Cleanup-Routinen
-   - Lösung: Implementierung von stop_music() und stop_all_sounds()
+2. **Stream Integration**
+   - Problem: Overlay-Kompatibilität
+   - Lösung: Angepasstes UI-System
 
-3. **Exit-Handling**
-   - Problem: Unsauberes Beenden der Anwendung
-   - Lösung: Verbesserte Event-Verarbeitung und Cleanup
+3. **Event-Handling**
+   - Problem: Challenge-Tracking
+   - Lösung: Verbessertes Event-System
 
 ### Offene Tasks
-1. **Asset-Management**
-   - Fehlende Sprites vervollständigen
-   - Sound-Effekte optimieren
-   - Laden großer Assets optimieren
+1. **Content Management**
+   - Challenge-Vorlagen erweitern
+   - Export-Funktionen optimieren
+   - Event-System ausbauen
 
-2. **Performance**
-   - Partikeleffekte optimieren
-   - Memory-Leaks identifizieren
-   - Frame-Rate stabilisieren
-
-## 📈 Nächste Schritte
-
-### Kurzfristig
-1. Asset-System vervollständigen
-2. Fehlende Sound-Effekte einbinden
-3. Performance-Monitoring implementieren
-
-### Mittelfristig
-1. Scoring-System entwickeln
-2. Challenge-System erweitern
-3. UI/UX verfeinern
-
-### Langfristig
-1. YouTube-Integration vorbereiten
-2. Community-Features planen
-3. Live-Stream-Kompatibilität testen
+2. **Stream Features**
+   - Weitere Overlay-Optionen
+   - Chat-Integration
+   - Clip-Generierung
