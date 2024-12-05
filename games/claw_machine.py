@@ -1,507 +1,741 @@
 import pygame
 import random
 import math
-import sys
 import os
-from .constants import *
-import time
+from utils.game_base import BaseGame
+from utils.font_manager import FontManager
+from utils.sound_manager import SoundManager
+from utils.ui_elements import Button, InfoBox
+from games.claw_constants import *
+from typing import List, Dict, Any
 
-class Capsule:
-    def __init__(self, x, y, difficulty):
+class ChallengeBox:
+    def __init__(self, screen, font_manager):
+        self.screen = screen
+        self.font_manager = font_manager
+        self.visible = False
+        self.text = ""
+        self.width = 400
+        self.height = 300
+        self.x = (screen.get_width() - self.width) // 2
+        self.y = (screen.get_height() - self.height) // 2
+        self.fade_in = 0
+        self.fade_out = 0
+    
+    def show(self, text):
+        """Show the challenge box with the given text"""
+        self.text = text
+        self.visible = True
+        self.fade_in = 255
+    
+    def hide(self):
+        """Hide the challenge box"""
+        self.visible = False
+        self.fade_in = 0
+    
+    def update(self):
+        """Update animation states"""
+        if self.fade_in > 0:
+            self.fade_in = max(0, self.fade_in - 10)
+    
+    def draw(self, screen):
+        """Draw the challenge box if visible"""
+        if not self.visible:
+            return
+            
+        # Draw semi-transparent background
+        surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        alpha = min(200, self.fade_in if self.fade_in > 0 else 200)
+        pygame.draw.rect(surface, (0, 0, 0, alpha), surface.get_rect(), border_radius=15)
+        
+        # Split text into lines
+        lines = self.text.split('\n')
+        y_offset = 20
+        
+        # Draw title with title font
+        title_font = self.font_manager.get_font('subtitle')
+        title_surface = title_font.render(lines[0], True, GOLD)
+        title_rect = title_surface.get_rect(centerx=self.width//2, y=y_offset)
+        surface.blit(title_surface, title_rect)
+        
+        # Draw challenge text with normal font
+        y_offset += 60
+        normal_font = self.font_manager.get_font('normal')
+        for line in lines[1:]:
+            if line.strip():  # Only render non-empty lines
+                text_surface = normal_font.render(line, True, WHITE)
+                text_rect = text_surface.get_rect(centerx=self.width//2, y=y_offset)
+                surface.blit(text_surface, text_rect)
+                y_offset += 30
+        
+        # Draw the surface to screen
+        screen.blit(surface, (self.x, self.y))
+
+class Pokeball:
+    def __init__(self, x, y, ball_type, info):
         self.x = x
         self.y = y
-        self.difficulty = difficulty
-        # Farben basierend auf Schwierigkeit
-        self.colors = {
-            "easy": (255, 200, 200),    # Hellrot
-            "medium": (255, 100, 100),  # Mittelrot
-            "hard": (255, 0, 0),        # Dunkelrot
-            "jackpot": (255, 215, 0)    # Gold
-        }
-        self.radius = 20
+        self.info = info
+        self.ball_type = ball_type
         self.grabbed = False
-
+        self.rotation = 0
+        self.swing_angle = 0
+        
+        # Load sprite
+        try:
+            self.sprite = pygame.image.load(f"assets/sprites/pokeballs/{info['sprite']}")
+            self.sprite = pygame.transform.scale(self.sprite, (30, 30))
+        except Exception as e:
+            print(f"Error loading sprite for {ball_type}: {e}")
+            # Create a default colored circle as fallback
+            self.sprite = pygame.Surface((30, 30), pygame.SRCALPHA)
+            pygame.draw.circle(self.sprite, (255, 0, 0), (15, 15), 15)
+    
+    def update(self):
+        if self.grabbed:
+            self.rotation += ROTATION_SPEED
+            self.swing_angle = math.sin(pygame.time.get_ticks() * SWING_SPEED) * 30
+    
     def draw(self, screen):
-        color = self.colors[self.difficulty]
-        pygame.draw.circle(screen, color, (self.x, self.y), self.radius)
-        # Glanzeffekt
-        pygame.draw.circle(screen, (255, 255, 255), (self.x - 5, self.y - 5), 5)
+        # Create a copy of the sprite for rotation
+        rotated = pygame.transform.rotate(self.sprite, self.rotation + self.swing_angle)
+        # Get the rect for centered rotation
+        rect = rotated.get_rect(center=(self.x, self.y))
+        # Draw the rotated sprite
+        screen.blit(rotated, rect)
 
-class ClawMachine:
+class InfoBox:
+    def __init__(self, x, y, width, height, title):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.title = title
+        self.visible = False
+        self.scroll_y = 0
+        self.text = []
+        
+    def set_text(self, text):
+        self.text = text
+        
+    def handle_scroll(self, event):
+        if event.type == pygame.MOUSEWHEEL:
+            self.scroll_y += event.y * 10
+    
+    def draw(self, screen, font_manager):
+        if not self.visible:
+            return
+        
+        # Draw semi-transparent background
+        surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        pygame.draw.rect(surface, (0, 0, 0, 200), (0, 0, self.width, self.height), border_radius=15)
+        
+        # Draw title with title font
+        title_font = font_manager.get_font('title')
+        title_surface = title_font.render(self.title, True, (255, 215, 0))
+        title_rect = title_surface.get_rect(centerx=self.width//2, y=20)
+        surface.blit(title_surface, title_rect)
+        
+        # Draw text
+        y_offset = 60
+        for line, color in self.text:
+            text_surface = font_manager.get_font('normal').render(line, True, color)
+            text_rect = text_surface.get_rect(centerx=self.width//2, y=y_offset)
+            surface.blit(text_surface, (self.width//2 - text_surface.get_width()//2, y_offset + self.scroll_y))
+            y_offset += 30
+        
+        # Draw the surface to screen
+        screen.blit(surface, (self.x, self.y))
+
+class ClawMachine(BaseGame):
     def __init__(self, screen):
+        super().__init__(screen)
         self.screen = screen
         self.WINDOW_WIDTH = screen.get_width()
         self.WINDOW_HEIGHT = screen.get_height()
         
-        # Farben
-        self.WHITE = (255, 255, 255)
-        self.BLACK = (0, 0, 0)
-        self.RED = (255, 50, 50)
-        self.GREEN = (50, 255, 50)
-        self.YELLOW = (255, 255, 50)
-        self.GOLD = (255, 215, 0)
-        self.BLUE = (50, 150, 255)
-        self.PURPLE = (147, 112, 219)
-        self.NEON_BLUE = (50, 150, 255)
-        self.NEON_PINK = (255, 50, 150)
+        # Initialize font manager
+        self.font_manager = FontManager()
         
-        # UI Einstellungen
-        self.BUTTON_WIDTH = 120
-        self.BUTTON_HEIGHT = 40
-        self.BUTTON_RADIUS = 10
-        
-        # Animation Einstellungen
+        # Initialize game state
+        self.score = 0
+        self.claw_state = "idle"
+        self.claw_x = self.WINDOW_WIDTH // 2
+        self.claw_y = 100
+        self.grabbed_ball = None
+        self.pokeballs = []
         self.particles = []
-        self.glow_effect = 0
-        self.neon_offset = 0
-        self.capsule_glow = 0
+        self.current_challenge = None
         
-        # Buttons
-        self.back_button = pygame.Rect(
-            20,
-            self.WINDOW_HEIGHT - 60,
-            self.BUTTON_WIDTH,
-            self.BUTTON_HEIGHT
-        )
+        # Initialize challenge box
+        self.challenge_box = ChallengeBox(self.screen, self.font_manager)
+        self.challenge_box.visible = False
         
-        self.drop_button = pygame.Rect(
-            self.WINDOW_WIDTH//2 - self.BUTTON_WIDTH//2,
-            self.WINDOW_HEIGHT - 60,
-            self.BUTTON_WIDTH,
-            self.BUTTON_HEIGHT
-        )
+        # Initialize buttons
+        self.init_buttons()
         
-        # Fonts
-        try:
-            self.title_font = pygame.font.Font("assets/fonts/Pokemon Solid.ttf", 48)
-            self.button_font = pygame.font.Font("assets/fonts/Pokemon Solid.ttf", 24)
-            self.challenge_font = pygame.font.Font("assets/fonts/Pokemon Solid.ttf", 20)
-        except:
-            self.title_font = pygame.font.Font(None, 48)
-            self.button_font = pygame.font.Font(None, 24)
-            self.challenge_font = pygame.font.Font(None, 20)
+        # Initialize resources
+        self.init_game_resources()
         
-        # Sets für die Challenges
-        self.SETS = [
-            "Scarlet & Violet - 151",
-            "Paldea Evolved",
-            "Scarlet & Violet Base Set",
-            "Obsidian Flames",
-            "Paradise Lost",
-            "Paradox Rift"
-        ]
+        # Create initial pokeballs
+        self.spawn_pokeballs()
 
-        # Challenge Pools
-        self.CHALLENGES = {
-            "easy": [
-                "Finde die Commons für dein Deck aus {set}! (Öffne Packs bis du sie hast)",
-                "Sammle 4 verschiedene Energien aus {set}! (Öffne Packs bis du sie hast)",
-                "Finde 3 verschiedene Trainer-Karten aus {set}! (Öffne Packs bis du sie hast)",
-                "Sammle 2 verschiedene Stage-1 Pokémon aus {set}! (Öffne Packs bis du sie hast)",
-                "Finde 3 verschiedene Basic-Pokémon aus {set}! (Öffne Packs bis du sie hast)"
-            ],
-            "medium": [
-                "Sammle 2 Reverse Holo Trainer aus {set}! (Öffne Packs bis du sie hast)",
-                "Finde 1 Illustration Rare (IR) aus {set}! (Öffne Packs bis du sie hast)",
-                "Sammle 2 Holo-Rare Pokémon aus {set}! (Öffne Packs bis du sie hast)",
-                "Finde 1 Ultra Rare ex-Pokémon aus {set}! (Öffne Packs bis du sie hast)",
-                "Sammle 1 Full Art Trainer aus {set}! (Öffne Packs bis du sie hast)"
-            ],
-            "hard": [
-                "Finde 1 Alternative Art ex aus {set}! (Öffne Packs bis du sie hast)",
-                "Sammle 1 Secret Rare aus {set}! (Öffne Packs bis du sie hast)",
-                "Finde 1 Special Illustration Rare (SIR) aus {set}! (Öffne Packs bis du sie hast)",
-                "Sammle 1 Gold Secret Rare aus {set}! (Öffne Packs bis du sie hast)",
-                "Finde 1 Hyper Rare Rainbow aus {set}! (Öffne Packs bis du sie hast)"
-            ],
-            "jackpot": [
-                "MEGA JACKPOT! Öffne eine ganze Box {set} für die Community!",
-                "ULTRA JACKPOT! Öffne eine Elite Trainer Box {set} für die Community!",
-                "MASTER JACKPOT! Öffne ein Premium Collection Display {set} für die Community!",
-                "TERA JACKPOT! Öffne ein Build & Battle Stadium {set} für die Community!"
-            ]
+    def init_buttons(self):
+        """Initialize game buttons"""
+        button_width = 120
+        button_height = 40
+        padding = 20
+        
+        # Create info box
+        self.info_box = InfoBox(
+            self.WINDOW_WIDTH//2 - 200,  # x position
+            self.WINDOW_HEIGHT//2 - 150,  # y position
+            400,  # width
+            300,  # height
+            "Spielregeln"  # title
+        )
+        
+        # Define colors for different ball types
+        normal_color = (255, 100, 100)    # Red
+        hisui_color = (100, 100, 255)     # Blue
+        ultra_color = (150, 150, 150)     # Gray
+        beast_color = (147, 112, 219)     # Purple
+        master_color = (255, 215, 0)      # Gold
+        white = (255, 255, 255)           # White
+        
+        # Set info text with colors
+        self.info_box.set_text([
+            ("Steuerung:", white),
+            ("• Pfeiltasten: Bewegung der Klaue", white),
+            ("• Leertaste: Klaue senken", white),
+            ("• ESC: Spiel beenden", white),
+            ("", white),  # Empty line
+            ("Pokébälle & Chancen:", white),
+            ("• Normal Ball: 50% Fangchance", normal_color),
+            ("• Hisui Ball: 65% Fangchance", hisui_color),
+            ("• Ultra Ball: 75% Fangchance", ultra_color),
+            ("• Beast Ball: 85% Fangchance", beast_color),
+            ("• Master Ball: 100% Fangchance", master_color),
+            ("", white),  # Empty line
+            ("Spielablauf:", white),
+            ("1. Bewege die Klaue über den Ball", white),
+            ("2. Drücke Leertaste zum Greifen", white),
+            ("3. Die Klaue senkt sich automatisch", white),
+            ("4. Fangchance basiert auf Balltyp", white),
+            ("5. Erfolgreiche Fänge = Punkte!", white),
+            ("", white),  # Empty line
+            ("Tipp: Time deinen Griff genau!", white)
+        ])
+        
+        # Create buttons
+        self.buttons = {
+            'back': Button(
+                padding,  # x position
+                padding,  # y position
+                button_width,
+                button_height,
+                "Zurück",
+                color=(200, 50, 50),  # Red
+                text_color=(255, 255, 255)  # White
+            ),
+            'reset': Button(
+                self.WINDOW_WIDTH - button_width - padding - button_width - padding,  # x position
+                padding,  # y position
+                button_width,
+                button_height,
+                "Neu",
+                color=(50, 200, 50),  # Green
+                text_color=(255, 255, 255)  # White
+            ),
+            'info': Button(
+                self.WINDOW_WIDTH - button_width - padding,  # x position
+                padding,  # y position
+                button_width,
+                button_height,
+                "Info",
+                color=(100, 100, 200),  # Blue
+                text_color=(255, 255, 255)  # White
+            )
         }
         
-        # Sound initialization
+    def init_game_resources(self):
+        """Initialize game resources"""
         try:
-            # Load sound effects using working sound files
-            self.DROP_SOUND = pygame.mixer.Sound(os.path.join("assets", "sounds", "stop.wav"))  # Using stop.wav for drop
-            self.GRAB_SOUND = pygame.mixer.Sound(os.path.join("assets", "sounds", "spin.wav"))  # Using spin.wav for grab
-            self.WIN_SOUND = pygame.mixer.Sound(os.path.join("assets", "sounds", "jackpot.wav"))
-            self.CLICK_SOUND = pygame.mixer.Sound(os.path.join("assets", "sounds", "stop.wav"))  # Using stop.wav for click
+            # Load Pokeball sprites
+            self.POKEBALL_IMAGES = {}
+            for category, balls in POKEBALLS.items():
+                img_path = f"assets/sprites/pokeballs/{balls['sprite']}"
+                if os.path.exists(img_path):
+                    image = pygame.image.load(img_path)
+                    image = pygame.transform.scale(image, (POKEBALL_SIZE, POKEBALL_SIZE))
+                    self.POKEBALL_IMAGES[balls['sprite']] = image
             
-            # Set sound volumes
-            if self.DROP_SOUND: self.DROP_SOUND.set_volume(0.3)
-            if self.GRAB_SOUND: self.GRAB_SOUND.set_volume(0.3)
-            if self.WIN_SOUND: self.WIN_SOUND.set_volume(0.5)
-            if self.CLICK_SOUND: self.CLICK_SOUND.set_volume(0.2)  # Lower volume for click
+            # Try to load claw sprite, create fallback if not found
+            try:
+                self.CLAW_IMAGE = pygame.image.load("assets/sprites/claw.png")
+                self.CLAW_IMAGE = pygame.transform.scale(self.CLAW_IMAGE, (CLAW_SIZE, CLAW_SIZE))
+            except:
+                # Create a simple claw shape as fallback
+                self.CLAW_IMAGE = pygame.Surface((CLAW_SIZE, CLAW_SIZE), pygame.SRCALPHA)
+                pygame.draw.polygon(self.CLAW_IMAGE, (200, 200, 200), [
+                    (CLAW_SIZE//2, 0),  # Top point
+                    (0, CLAW_SIZE//2),   # Left point
+                    (CLAW_SIZE//2, CLAW_SIZE),  # Bottom point
+                    (CLAW_SIZE, CLAW_SIZE//2)   # Right point
+                ])
             
-            # Load and start background music
-            pygame.mixer.music.load(os.path.join("assets", "music", "1-11-Route-101.wav"))
-            pygame.mixer.music.set_volume(0.4)  # Lower volume for background music
-            pygame.mixer.music.play(-1)  # Loop indefinitely
+            # Load sounds with fallback
+            try:
+                self.DROP_SOUND = pygame.mixer.Sound("assets/sounds/drop.wav")
+                self.GRAB_SOUND = pygame.mixer.Sound("assets/sounds/grab.wav")
+                self.WIN_SOUND = pygame.mixer.Sound("assets/sounds/win.wav")
+            except:
+                self.DROP_SOUND = None
+                self.GRAB_SOUND = None
+                self.WIN_SOUND = None
+                print("Sound files not found, continuing without sound")
+        
         except Exception as e:
-            print(f"Warning: Some sound files could not be loaded: {e}")
+            print(f"Error loading resources: {e}")
             self.DROP_SOUND = None
             self.GRAB_SOUND = None
             self.WIN_SOUND = None
-            self.CLICK_SOUND = None
+
+    def generate_pokeballs(self):
+        """Generate a mix of different Pokéballs"""
+        num_balls = random.randint(15, 25)
+        total_weight = sum(ball['weight'] for ball in POKEBALLS.values())
         
-        # Claw state
-        self.claw_x = self.WINDOW_WIDTH // 2
-        self.claw_y = 100
-        self.claw_speed = 5
-        self.claw_state = "idle"  # idle, dropping, grabbing, rising
-        self.target_y = 100
-        self.grab_timer = 0
-        self.initial_claw_y = 100
-        
-        # Challenge capsules
-        self.capsules = []
-        self.grabbed_capsule = None
-        self.current_challenge = None
-        self.generate_capsules()
-    
-    def generate_capsules(self):
-        # Erstelle eine Mischung aus verschiedenen Schwierigkeitsgraden
-        difficulties = ["easy"] * 15 + ["medium"] * 10 + ["hard"] * 5 + ["jackpot"] * 1
-        random.shuffle(difficulties)
-        
-        for i, diff in enumerate(difficulties):
-            x = random.randint(200, self.WINDOW_WIDTH - 200)
-            y = random.randint(400, self.WINDOW_HEIGHT - 150)
-            self.capsules.append(Capsule(x, y, diff))
-    
-    def get_challenge(self, difficulty):
-        selected_set = random.choice(self.SETS)
-        if difficulty in self.CHALLENGES:
-            challenge = random.choice(self.CHALLENGES[difficulty])
-            return challenge.format(set=selected_set)
-        return "Versuche es nochmal!"
-    
-    def move_claw(self):
-        keys = pygame.key.get_pressed()
-        
-        if self.claw_state == "idle":
-            # Bewegung nur im idle-Zustand erlauben
-            if keys[pygame.K_LEFT] and self.claw_x > 100:
-                self.claw_x -= self.claw_speed
-            if keys[pygame.K_RIGHT] and self.claw_x < self.WINDOW_WIDTH - 100:
-                self.claw_x += self.claw_speed
-            if keys[pygame.K_SPACE]:
-                self.handle_grab()
-        
-        elif self.claw_state == "dropping":
-            # Greifarm nach unten bewegen
-            self.claw_y += self.claw_speed
-            if self.claw_y >= self.target_y:
-                self.claw_state = "grabbing"
-                self.grab_timer = 20  # Timer für die Greif-Animation
-                
-        elif self.claw_state == "grabbing":
-            self.grab_timer -= 1
-            if self.grab_timer <= 0:
-                self.claw_state = "rising"
-                # Prüfen ob eine Kapsel gegriffen wurde
-                for capsule in self.capsules:
-                    if abs(capsule.x - self.claw_x) < 40 and abs(capsule.y - self.claw_y) < 40:
-                        self.grabbed_capsule = capsule
-                        self.capsules.remove(capsule)
-                        self.current_challenge = self.get_challenge(capsule.difficulty)
-                        break
-        
-        elif self.claw_state == "rising":
-            # Greifarm nach oben bewegen
-            self.claw_y -= self.claw_speed
-            if self.grabbed_capsule:
-                self.grabbed_capsule.x = self.claw_x
-                self.grabbed_capsule.y = self.claw_y + 40
+        for _ in range(num_balls):
+            # Random position within the machine
+            x = random.randint(100, self.WINDOW_WIDTH - 100)
+            y = random.randint(200, self.WINDOW_HEIGHT - 150)
             
-            if self.claw_y <= 100:  # Ursprüngliche Position
-                self.claw_state = "idle"
-                self.grabbed_capsule = None  # Kapsel loslassen
+            # Select ball type based on weights
+            rand = random.uniform(0, total_weight)
+            current_weight = 0
+            
+            for ball_type, info in POKEBALLS.items():
+                current_weight += info['weight']
+                if rand <= current_weight:
+                    self.pokeballs.append(Pokeball(x, y, ball_type, info))
+                    break
     
-    def draw_neon_line(self, surface, color, start_pos, end_pos, width=2):
-        """Draw a neon-style line with glow effect"""
-        # Äußerer Glow
-        glow_color = (*color, 50)  # Semi-transparent
-        for i in range(3):
-            offset = i * 2
-            pygame.draw.line(surface, glow_color, 
-                           (start_pos[0]-offset, start_pos[1]), 
-                           (end_pos[0]-offset, end_pos[1]), 
-                           width+4)
-        # Innere helle Linie
-        pygame.draw.line(surface, color, start_pos, end_pos, width)
-        # Weißer Kern
-        pygame.draw.line(surface, self.WHITE, start_pos, end_pos, max(1, width-2))
-
-    def draw(self):
-        # Hintergrund mit Gradient
-        gradient = self.create_gradient((20, 20, 40), (40, 40, 80), self.WINDOW_HEIGHT)
-        self.screen.blit(gradient, (0, 0))
-        
-        # Titel mit Glow-Effekt
-        title_shadow = self.title_font.render("Pokémon Claw Machine", True, (0, 0, 0))
-        title = self.title_font.render("Pokémon Claw Machine", True, self.GOLD)
-        glow = math.sin(time.time() * 3) * 0.5 + 0.5
-        title_pos = (self.WINDOW_WIDTH//2 - title.get_width()//2, 20)
-        self.screen.blit(title_shadow, (title_pos[0] + 2, title_pos[1] + 2))
-        self.screen.blit(title, title_pos)
-        
-        # Maschinen-Gehäuse mit Neon-Effekt
-        machine_rect = pygame.Rect(50, 100, self.WINDOW_WIDTH-100, self.WINDOW_HEIGHT-200)
-        pygame.draw.rect(self.screen, (30, 30, 50), machine_rect)
-        
-        # Neon-Umrandung
-        neon_offset = math.sin(time.time() * 5) * 2
-        neon_points = [
-            (machine_rect.left, machine_rect.top),
-            (machine_rect.right, machine_rect.top),
-            (machine_rect.right, machine_rect.bottom),
-            (machine_rect.left, machine_rect.bottom),
-            (machine_rect.left, machine_rect.top)
-        ]
-        for i in range(len(neon_points)-1):
-            self.draw_neon_line(self.screen, self.NEON_BLUE, 
-                              neon_points[i], neon_points[i+1])
-        
-        # Kapseln zeichnen mit Glow
-        for capsule in self.capsules:
-            # Glow-Effekt
-            glow_radius = math.sin(time.time() * 3 + capsule.x) * 2 + 5
-            glow_surface = pygame.Surface((30, 30), pygame.SRCALPHA)
-            pygame.draw.circle(glow_surface, (*self.GOLD, 100), (15, 15), glow_radius)
-            self.screen.blit(glow_surface, (capsule.x-15, capsule.y-15))
-            
-            # Kapsel
-            color = self.get_difficulty_color(capsule.difficulty)
-            pygame.draw.circle(self.screen, color, (capsule.x, capsule.y), 10)
-            pygame.draw.circle(self.screen, self.WHITE, (capsule.x, capsule.y), 5)
-        
-        # Greifarm mit Neon-Effekt
-        claw_color = self.NEON_BLUE
-        if self.grabbed_capsule:
-            claw_color = self.GOLD
-        
-        self.draw_neon_line(self.screen, claw_color,
-                           (self.claw_x, 0),
-                           (self.claw_x, self.claw_y))
-        
-        # Greifer
-        claw_points = [
-            (self.claw_x, self.claw_y),
-            (self.claw_x - 20, self.claw_y + 20),
-            (self.claw_x + 20, self.claw_y + 20)
-        ]
-        for i in range(len(claw_points)-1):
-            self.draw_neon_line(self.screen, claw_color,
-                              claw_points[i], claw_points[i+1])
-        
-        # Back Button mit Hover-Effekt
-        mouse_pos = pygame.mouse.get_pos()
-        back_color = self.PURPLE if self.back_button.collidepoint(mouse_pos) else self.RED
-        self.draw_rounded_rect(self.screen, back_color, self.back_button, self.BUTTON_RADIUS)
-        back_text = self.button_font.render("ZURÜCK", True, self.WHITE)
-        back_rect = back_text.get_rect(center=self.back_button.center)
-        self.screen.blit(back_text, back_rect)
-        
-        # Drop Button mit Hover-Effekt
-        drop_color = self.BLUE if self.drop_button.collidepoint(mouse_pos) else self.RED
-        if self.claw_state == "idle":
-            self.draw_rounded_rect(self.screen, drop_color, self.drop_button, self.BUTTON_RADIUS)
-            drop_text = self.button_font.render("GREIFEN", True, self.WHITE)
-            drop_rect = drop_text.get_rect(center=self.drop_button.center)
-            self.screen.blit(drop_text, drop_rect)
-        
-        # Challenge Text mit Animation
-        if self.current_challenge:
-            # Text in mehrere Zeilen aufteilen
-            words = self.current_challenge.split()
-            lines = []
-            current_line = []
-            for word in words:
-                test_line = ' '.join(current_line + [word])
-                if self.challenge_font.size(test_line)[0] > machine_rect.width - 40:
-                    lines.append(' '.join(current_line))
-                    current_line = [word]
-                else:
-                    current_line.append(word)
-            lines.append(' '.join(current_line))
-            
-            # Zeilen rendern mit Schatten
-            y_offset = machine_rect.bottom + 20
-            for line in lines:
-                text_shadow = self.challenge_font.render(line, True, (0, 0, 0))
-                text = self.challenge_font.render(line, True, self.WHITE)
-                text_rect = text.get_rect(center=(self.WINDOW_WIDTH//2, y_offset))
-                self.screen.blit(text_shadow, (text_rect.x + 2, text_rect.y + 2))
-                self.screen.blit(text, text_rect)
-                y_offset += 30
-        
-        # Partikel-Effekte
-        for particle in self.particles:
-            alpha = int((particle['life'] / 60) * 255)
-            particle_surface = pygame.Surface((4, 4), pygame.SRCALPHA)
-            particle_color = (*particle['color'], alpha)
-            pygame.draw.circle(particle_surface, particle_color, (2, 2), 2)
-            self.screen.blit(particle_surface, (particle['x'], particle['y']))
-        
-        pygame.display.flip()
-
-    def get_difficulty_color(self, difficulty):
-        """Get color based on difficulty"""
-        if difficulty == "easy":
-            return self.GREEN
-        elif difficulty == "medium":
-            return self.YELLOW
-        elif difficulty == "hard":
-            return self.RED
-        return self.WHITE
-
-    def create_gradient(self, color1, color2, height):
-        """Create a vertical gradient"""
-        gradient = pygame.Surface((self.WINDOW_WIDTH, height))
-        for i in range(height):
-            ratio = i / height
-            color = tuple(int(channel1 + ratio * (channel2 - channel1)) for channel1, channel2 in zip(color1, color2))
-            pygame.draw.line(gradient, color, (0, i), (self.WINDOW_WIDTH, i))
-        return gradient
-
-    def draw_rounded_rect(self, surface, color, rect, radius):
-        """Draw a rounded rectangle"""
-        pygame.draw.rect(surface, color, rect)
-        pygame.draw.circle(surface, color, (rect.left, rect.top), radius)
-        pygame.draw.circle(surface, color, (rect.right, rect.top), radius)
-        pygame.draw.circle(surface, color, (rect.left, rect.bottom), radius)
-        pygame.draw.circle(surface, color, (rect.right, rect.bottom), radius)
-
-    def add_particles(self, x, y, color):
-        """Add particles for effects"""
+    def create_particles(self, x, y):
+        """Create particles for grab effect"""
+        particles = []
         for _ in range(10):
-            speed = random.uniform(2, 5)
             angle = random.uniform(0, 2 * math.pi)
-            self.particles.append({
+            speed = random.uniform(2, 5)
+            particle = {
                 'x': x,
                 'y': y,
                 'dx': math.cos(angle) * speed,
                 'dy': math.sin(angle) * speed,
-                'color': color,
-                'life': 60
-            })
-
+                'life': random.randint(20, 30),
+                'color': (255, 215, 0)
+            }
+            particles.append(particle)
+        return particles
+    
     def update_particles(self):
-        """Update particle positions and life"""
+        """Update particle positions and remove dead particles"""
         for particle in self.particles[:]:
             particle['x'] += particle['dx']
             particle['y'] += particle['dy']
             particle['life'] -= 1
             if particle['life'] <= 0:
                 self.particles.remove(particle)
-
+    
+    def draw_particles(self, screen):
+        """Draw particles"""
+        for particle in self.particles:
+            alpha = min(255, particle['life'] * 8)
+            pygame.draw.circle(
+                screen,
+                particle['color'] + (alpha,),
+                (int(particle['x']), int(particle['y'])),
+                2
+            )
+    
+    def draw_gradient_background(self, screen):
+        """Draw gradient background"""
+        for y in range(self.WINDOW_HEIGHT):
+            progress = y / self.WINDOW_HEIGHT
+            color = (
+                int(20 + progress * 20),
+                int(20 + progress * 20),
+                int(35 + progress * 35)
+            )
+            pygame.draw.line(screen, color, (0, y), (self.WINDOW_WIDTH, y))
+    
+    def draw_claw(self, screen):
+        """Draw the claw"""
+        # Draw claw base
+        pygame.draw.rect(screen, (100, 100, 100), 
+                        (self.claw_x - 5, 0, 10, self.claw_y))
+        
+        # Draw claw parts
+        claw_points = [
+            (self.claw_x - 15, self.claw_y + 20),
+            (self.claw_x + 15, self.claw_y + 20),
+            (self.claw_x, self.claw_y)
+        ]
+        pygame.draw.polygon(screen, (150, 150, 150), claw_points)
+    
+    def check_collision(self, ball):
+        """Check if claw collides with ball"""
+        claw_rect = pygame.Rect(self.claw_x - 15, self.claw_y, 30, 30)
+        ball_rect = pygame.Rect(ball.x - 15, ball.y - 15, 30, 30)
+        return claw_rect.colliderect(ball_rect)
+    
     def handle_grab(self):
-        """Handle the claw grab action"""
+        """Handle the grab action"""
         if self.claw_state == "idle":
-            if self.DROP_SOUND:
-                self.DROP_SOUND.play()
             self.claw_state = "dropping"
-            self.target_y = self.WINDOW_HEIGHT - 150
-            
-    def update_claw(self):
-        """Update claw position and state"""
-        if self.claw_state == "dropping":
-            if self.claw_y < self.target_y:
-                self.claw_y += 5
-            else:
-                if self.GRAB_SOUND:
-                    self.GRAB_SOUND.play()
-                self.claw_state = "rising"
-                
-        elif self.claw_state == "rising":
-            if self.claw_y > self.initial_claw_y:
-                self.claw_y -= 5
-            else:
-                if self.grabbed_capsule:  # Nur Sound abspielen wenn wir eine Kapsel haben
-                    if self.WIN_SOUND:
-                        self.WIN_SOUND.play()
-                    # Challenge setzen
-                    difficulty = self.grabbed_capsule.difficulty
-                    self.current_challenge = self.get_challenge(difficulty)
-                    self.grabbed_capsule = None
-                    # Partikel für erfolgreichen Grab
-                    self.add_particles(self.claw_x, self.claw_y, self.get_difficulty_color(difficulty))
-                
-                self.claw_state = "idle"
-                self.claw_y = self.initial_claw_y
-
-    def check_capsule_grab(self):
-        """Check if claw grabbed a capsule"""
-        for capsule in self.capsules:
-            if abs(self.claw_x - capsule.x) < 20 and abs(self.claw_y - capsule.y) < 20:
-                self.grabbed_capsule = capsule
-                self.capsules.remove(capsule)
-                self.claw_state = "rising"
-                self.target_y = 100
-                
-                # Add particles when grabbing capsule
-                self.add_particles(capsule.x, capsule.y, self.GOLD)
-                
-                if self.GRAB_SOUND:
-                    self.GRAB_SOUND.play()
-                
-                return capsule.difficulty
+            if hasattr(self, 'DROP_SOUND') and self.DROP_SOUND:
+                self.DROP_SOUND.play()
+    
+    def generate_challenge(self):
+        """Generate a random challenge based on the grabbed ball"""
+        if self.grabbed_ball and self.grabbed_ball.info.get('challenges'):
+            return random.choice(self.grabbed_ball.info['challenges'])
         return None
-
+    
+    def reset_game(self):
+        """Reset the game state"""
+        self.claw_state = "idle"
+        self.claw_x = self.WINDOW_WIDTH // 2
+        self.claw_y = 100
+        self.grabbed_ball = None
+        self.pokeballs.clear()
+        self.particles.clear()
+        self.generate_pokeballs()
+    
     def update(self):
         """Update game state"""
         # Update particles
         self.update_particles()
         
-        # Update claw position based on state
-        self.update_claw()
+        # Update challenge box
+        if self.challenge_box:
+            self.challenge_box.update()
         
-        # Check if claw grabbed a capsule
-        if self.claw_state == "rising" and not self.grabbed_capsule:
-            self.check_capsule_grab()
-    
-    def run(self):
-        clock = pygame.time.Clock()
-        running = True
-        
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                    
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
-                    
-                    # Handle back button
-                    if self.back_button.collidepoint(mouse_pos):
-                        if self.CLICK_SOUND:
-                            self.CLICK_SOUND.play()
-                        return "menu"
-                    
-                    # Handle drop button
-                    if self.drop_button.collidepoint(mouse_pos) and self.claw_state == "idle":
-                        self.handle_grab()
-            
-            # Handle keyboard input for claw movement
+        # Handle keyboard controls for claw movement
+        if self.claw_state == "idle" and not self.challenge_box.visible:
             keys = pygame.key.get_pressed()
-            if self.claw_state == "idle":
-                if keys[pygame.K_LEFT] and self.claw_x > 100:
-                    self.claw_x -= 5
-                if keys[pygame.K_RIGHT] and self.claw_x < self.WINDOW_WIDTH - 100:
-                    self.claw_x += 5
-            
-            # Update game state
-            self.update()
-            
-            # Draw everything
-            self.draw()
-            
-            # Cap the framerate
-            clock.tick(60)
+            if keys[pygame.K_LEFT] and self.claw_x > 100:
+                self.claw_x -= CLAW_SPEED
+            if keys[pygame.K_RIGHT] and self.claw_x < self.WINDOW_WIDTH - 100:
+                self.claw_x += CLAW_SPEED
+            if keys[pygame.K_SPACE]:
+                self.claw_state = "dropping"
+                if self.DROP_SOUND:
+                    self.DROP_SOUND.play()
         
-        return "menu"
+        # Update claw position and handle ball grabbing
+        if self.claw_state == "dropping":
+            self.claw_y += CLAW_DROP_SPEED
+            # Check for collisions with Pokeballs
+            for ball in self.pokeballs:
+                if not ball.grabbed and self.check_collision(ball):
+                    # Random chance to grab based on ball category
+                    grab_chance = GRAB_CHANCES.get(ball.info['category'], 0.5)
+                    if random.random() < grab_chance:
+                        ball.grabbed = True
+                        self.grabbed_ball = ball
+                        self.particles.extend(self.create_particles(ball.x, ball.y))
+                        if self.GRAB_SOUND:
+                            self.GRAB_SOUND.play()
+                    self.claw_state = "rising"
+                    break
+            
+            # Check if claw reached bottom
+            if self.claw_y >= self.WINDOW_HEIGHT - 150:
+                self.claw_state = "rising"
+        
+        elif self.claw_state == "rising":
+            self.claw_y -= CLAW_SPEED
+            if self.grabbed_ball:
+                # Update grabbed ball position
+                self.grabbed_ball.x = self.claw_x
+                self.grabbed_ball.y = self.claw_y + 30
+                self.grabbed_ball.update()
+            
+            # Check if claw reached top
+            if self.claw_y <= 100:
+                self.claw_state = "idle"
+                if self.grabbed_ball:
+                    # Show challenge for grabbed ball
+                    self.show_challenge(self.grabbed_ball)
+                    self.grabbed_ball = None
+        
+        # Update all pokeballs
+        for ball in self.pokeballs:
+            if not ball.grabbed:
+                ball.update()
+
+    def process_event(self, event):
+        """Process pygame events"""
+        if event.type == pygame.QUIT:
+            return "quit"
+        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_i:
+                self.info_box.visible = not self.info_box.visible
+            elif event.key == pygame.K_ESCAPE:
+                if self.info_box.visible:
+                    self.info_box.visible = False
+                else:
+                    return "menu"
+            if event.key == pygame.K_SPACE:
+                if self.challenge_box.visible:
+                    self.challenge_box.hide()
+                    self.reset_game()
+    
+        # Handle scrolling in info box
+        if self.info_box.visible:
+            self.info_box.handle_scroll(event)
+    
+        # Handle button events
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Don't process buttons if challenge is showing
+            if not self.challenge_box.visible:
+                # Handle buttons
+                for button_name, button in self.buttons.items():
+                    if button.handle_event(event):
+                        if button_name == 'back':
+                            return "menu"
+                        elif button_name == 'reset':
+                            self.reset_game()
+                        elif button_name == 'info':
+                            self.info_box.visible = True
+                            self.info_box.set_text([
+                                ("Steuerung:", (255, 255, 255)),
+                                ("• Pfeiltasten: Bewegung der Klaue", (255, 255, 255)),
+                                ("• Leertaste: Klaue senken", (255, 255, 255)),
+                                ("• ESC: Spiel beenden", (255, 255, 255)),
+                                ("", (255, 255, 255)),  # Empty line
+                                ("Pokébälle & Chancen:", (255, 255, 255)),
+                                ("• Normal Ball: 50% Fangchance", (255, 100, 100)),
+                                ("• Hisui Ball: 65% Fangchance", (100, 100, 255)),
+                                ("• Ultra Ball: 75% Fangchance", (150, 150, 150)),
+                                ("• Beast Ball: 85% Fangchance", (147, 112, 219)),
+                                ("• Master Ball: 100% Fangchance", (255, 215, 0)),
+                                ("", (255, 255, 255)),  # Empty line
+                                ("Spielablauf:", (255, 255, 255)),
+                                ("1. Bewege die Klaue über den Ball", (255, 255, 255)),
+                                ("2. Drücke Leertaste zum Greifen", (255, 255, 255)),
+                                ("3. Die Klaue senkt sich automatisch", (255, 255, 255)),
+                                ("4. Fangchance basiert auf Balltyp", (255, 255, 255)),
+                                ("5. Erfolgreiche Fänge = Punkte!", (255, 255, 255)),
+                                ("", (255, 255, 255)),  # Empty line
+                                ("Tipp: Time deinen Griff genau!", (255, 255, 255))
+                            ])
+    
+        # Update button hover states
+        if event.type == pygame.MOUSEMOTION:
+            for button in self.buttons.values():
+                button.handle_event(event)
+    
+        return None
+
+    def draw(self, screen):
+        """Draw the game state"""
+        # Draw background
+        screen.fill((30, 30, 40))  # Dark blue-gray background
+        
+        # Draw buttons
+        for button in self.buttons.values():
+            button.draw(screen)
+    
+        # Draw score with large font
+        score_text = self.font_manager.get_font('large').render(f"Score: {self.score}", True, (255, 255, 255))
+        screen.blit(score_text, (20, 70))  # Moved down to not overlap with buttons
+        
+        # Draw title with title font
+        title = self.font_manager.get_font('title').render("Pokémon Claw Machine", True, (255, 215, 0))
+        title_rect = title.get_rect(center=(self.WINDOW_WIDTH//2, 50))
+        screen.blit(title, title_rect)
+        
+        # Draw Pokeballs
+        for ball in self.pokeballs:
+            if not ball.grabbed:
+                if hasattr(ball, 'sprite') and ball.sprite:
+                    rotated_sprite = pygame.transform.rotate(ball.sprite, ball.rotation)
+                    screen.blit(rotated_sprite, (ball.x - rotated_sprite.get_width()//2, 
+                                            ball.y - rotated_sprite.get_height()//2))
+                else:
+                    # Fallback: draw a colored circle
+                    pygame.draw.circle(screen, (255, 0, 0), (int(ball.x), int(ball.y)), POKEBALL_SIZE//2)
+    
+        # Draw claw
+        self.draw_claw(screen)
+    
+        # Draw grabbed ball if any
+        if self.grabbed_ball:
+            if hasattr(self.grabbed_ball, 'sprite') and self.grabbed_ball.sprite:
+                screen.blit(self.grabbed_ball.sprite, 
+                        (self.grabbed_ball.x - self.grabbed_ball.sprite.get_width()//2,
+                         self.grabbed_ball.y - self.grabbed_ball.sprite.get_height()//2))
+            else:
+                # Fallback: draw a colored circle
+                pygame.draw.circle(screen, (255, 0, 0), 
+                               (int(self.grabbed_ball.x), int(self.grabbed_ball.y)), 
+                               POKEBALL_SIZE//2)
+    
+        # Draw particles
+        for particle in self.particles:
+            pygame.draw.circle(screen, particle['color'], 
+                           (int(particle['x']), int(particle['y'])), 
+                           3)
+    
+        # Draw challenge box if visible
+        if self.challenge_box:
+            self.challenge_box.draw(screen)
+        
+        # Draw info box if visible
+        if self.info_box.visible:
+            self.info_box.draw(screen, self.font_manager)
+
+        # Update display
+        pygame.display.flip()
+
+    def show_challenge(self, pokeball):
+        """Display challenge based on pokeball type"""
+        if pokeball and hasattr(pokeball, 'info'):
+            category = pokeball.info['category']
+            challenges = pokeball.info['challenges']
+            description = pokeball.info['description']
+            
+            # Select a random challenge
+            challenge_text = random.choice(challenges)
+            
+            # Format the challenge text with description
+            full_text = f"✨ {description} ✨\n\n{challenge_text}"
+            
+            # Create or update challenge box
+            if self.challenge_box is None:
+                self.challenge_box = ChallengeBox(self.screen, self.font_manager)
+            
+            self.challenge_box.show(full_text)
+            self.current_challenge = challenge_text
+            
+            # Play win sound
+            if self.WIN_SOUND:
+                self.WIN_SOUND.play()
+    
+    def spawn_pokeballs(self):
+        """Spawn new pokeballs in the machine"""
+        self.pokeballs.clear()  # Clear existing pokeballs
+        num_balls = random.randint(MIN_BALLS, MAX_BALLS)
+        total_weight = sum(ball['weight'] for ball in POKEBALLS.values())
+        
+        for _ in range(num_balls):
+            # Random position within the machine area
+            x = random.randint(100, self.WINDOW_WIDTH - 100)
+            y = random.randint(200, self.WINDOW_HEIGHT - 150)
+            
+            # Select ball type based on weights
+            rand = random.uniform(0, total_weight)
+            current_weight = 0
+            
+            for ball_type, info in POKEBALLS.items():
+                current_weight += info['weight']
+                if rand <= current_weight:
+                    self.pokeballs.append(Pokeball(x, y, ball_type, info))
+                    break
+
+    def cleanup(self):
+        """Cleanup resources when exiting the game"""
+        try:
+            # Call parent cleanup first
+            if hasattr(super(), 'cleanup'):
+                super().cleanup()
+            
+            # Clear all game objects
+            if hasattr(self, 'pokeballs'):
+                self.pokeballs.clear()
+            if hasattr(self, 'particles'):
+                self.particles.clear()
+            self.grabbed_ball = None
+            
+            # Stop all sounds
+            if hasattr(self, 'DROP_SOUND') and self.DROP_SOUND:
+                try:
+                    self.DROP_SOUND.stop()
+                except:
+                    pass
+                self.DROP_SOUND = None
+                
+            if hasattr(self, 'GRAB_SOUND') and self.GRAB_SOUND:
+                try:
+                    self.GRAB_SOUND.stop()
+                except:
+                    pass
+                self.GRAB_SOUND = None
+                
+            if hasattr(self, 'WIN_SOUND') and self.WIN_SOUND:
+                try:
+                    self.WIN_SOUND.stop()
+                except:
+                    pass
+                self.WIN_SOUND = None
+            
+            # Clear image references
+            if hasattr(self, 'POKEBALL_IMAGES'):
+                self.POKEBALL_IMAGES.clear()
+            if hasattr(self, 'CLAW_IMAGE'):
+                self.CLAW_IMAGE = None
+            
+            # Clear UI elements
+            if hasattr(self, 'buttons'):
+                self.buttons.clear()
+            if hasattr(self, 'challenge_box'):
+                self.challenge_box = None
+            
+            # Clear font manager last
+            if hasattr(self, 'font_manager') and self.font_manager:
+                try:
+                    self.font_manager.cleanup()
+                except:
+                    pass
+                self.font_manager = None
+                
+        except Exception as e:
+            print(f"Error during cleanup: {e}")
+
+    def run(self):
+        """Main game loop"""
+        try:
+            clock = pygame.time.Clock()
+            running = True
+            
+            while running:
+                # Handle events
+                for event in pygame.event.get():
+                    result = self.process_event(event)
+                    if result == "quit":
+                        running = False
+                        break
+                    elif result == "menu":
+                        self.cleanup()  # Clean up before returning to menu
+                        return "menu"
+                
+                # Update game state
+                self.update()
+                
+                # Draw everything
+                self.draw(self.screen)
+                
+                # Cap the framerate
+                clock.tick(60)
+            
+            # Clean up before quitting
+            self.cleanup()
+            return "quit"
+            
+        except Exception as e:
+            print(f"Error in game loop: {e}")
+            self.cleanup()  # Ensure cleanup happens even on error
+            return "menu"

@@ -1,162 +1,196 @@
 import pygame
 import sys
-import os
-from games.constants import *
-
-# Initialize pygame with MP3 support
-pygame.init()
-pygame.mixer.pre_init(44100, -16, 2, 2048)
-pygame.mixer.init(44100, -16, 2, 2048)
-
-# Import games
+from utils.font_manager import FontManager
+from utils.ui_elements import Button
 from games.slot_machine import SlotMachine
 from games.claw_machine import ClawMachine
+import time
 
-class MenuButton:
-    def __init__(self, x, y, width, height, text, color):
-        self.rect = pygame.Rect(x, y, width, height)
-        self.text = text
-        self.color = color
-        self.hover = False
+class MainMenu:
+    def __init__(self, screen):
+        self.screen = screen
+        self.font_manager = FontManager()
+        self.title_font = self.font_manager.get_font('title')
+        self.normal_font = self.font_manager.get_font('normal')
         
+        # Create buttons
+        button_width = 200
+        button_height = 50
+        button_x = (screen.get_width() - button_width) // 2
+        
+        self.buttons = {
+            'slot': Button(
+                button_x, 200, button_width, button_height,
+                text='Slot Machine',
+                color=(50, 150, 255),
+                hover_color=(100, 180, 255),
+                text_color=(255, 255, 255)
+            ),
+            'claw': Button(
+                button_x, 300, button_width, button_height,
+                text='Claw Machine',
+                color=(255, 100, 100),
+                hover_color=(255, 150, 150),
+                text_color=(255, 255, 255)
+            ),
+            'quit': Button(
+                button_x, 400, button_width, button_height,
+                text='Quit Game',
+                color=(150, 150, 150),
+                hover_color=(180, 180, 180),
+                text_color=(255, 255, 255)
+            )
+        }
+    
     def draw(self, screen):
-        # Gradient effect when hovering
-        if self.hover:
-            color = (min(self.color[0] + 30, 255),
-                    min(self.color[1] + 30, 255),
-                    min(self.color[2] + 30, 255))
-        else:
-            color = self.color
-            
-        # Draw button with rounded corners
-        pygame.draw.rect(screen, color, self.rect, border_radius=15)
+        # Draw background
+        screen.fill((30, 30, 40))
         
-        # Add glow effect when hovering
-        if self.hover:
-            glow_surface = pygame.Surface((self.rect.width + 10, self.rect.height + 10), pygame.SRCALPHA)
-            pygame.draw.rect(glow_surface, (*color, 100), 
-                           (5, 5, self.rect.width, self.rect.height), 
-                           border_radius=15)
-            screen.blit(glow_surface, (self.rect.x - 5, self.rect.y - 5))
+        # Draw title
+        title = self.title_font.render("Pokemon Card Games", True, (255, 215, 0))
+        title_rect = title.get_rect(centerx=screen.get_width()//2, y=100)
+        screen.blit(title, title_rect)
         
-        # Draw text
-        font = pygame.font.Font(None, 36)
-        text_surface = font.render(self.text, True, (0, 0, 0))
-        text_rect = text_surface.get_rect(center=self.rect.center)
-        screen.blit(text_surface, text_rect)
+        # Draw buttons
+        for button in self.buttons.values():
+            button.draw(screen)
         
-    def update(self, mouse_pos):
-        self.hover = self.rect.collidepoint(mouse_pos)
-
-def create_gradient_background(width, height, color1, color2):
-    background = pygame.Surface((width, height))
-    for y in range(height):
-        ratio = y / height
-        color = (
-            int(color1[0] * (1 - ratio) + color2[0] * ratio),
-            int(color1[1] * (1 - ratio) + color2[1] * ratio),
-            int(color1[2] * (1 - ratio) + color2[2] * ratio)
-        )
-        pygame.draw.line(background, color, (0, y), (width, y))
-    return background
-
-def main():
-    # Set up display
-    screen = pygame.display.set_mode((800, 600))
-    pygame.display.set_caption("Pokemon Mini-Games")
-    clock = pygame.time.Clock()
+        # Draw version info
+        version_text = self.normal_font.render("v1.0.0", True, (200, 200, 200))
+        version_rect = version_text.get_rect(right=screen.get_width()-10, bottom=screen.get_height()-10)
+        screen.blit(version_text, version_rect)
     
-    # Create menu buttons
-    slot_button = MenuButton(300, 200, 200, 50, "Slot Machine", (147, 112, 219))  # Purple
-    claw_button = MenuButton(300, 300, 200, 50, "Claw Machine", (50, 150, 255))   # Blue
-    
-    # Initialize games
-    slot_machine = SlotMachine(screen)
-    claw_machine = ClawMachine(screen)
-    
-    # Create background
-    background = create_gradient_background(800, 600, (30, 30, 60), (60, 30, 60))
-    
-    # Load click sound
-    try:
-        click_sound = pygame.mixer.Sound(os.path.join("assets", "sounds", "stop.wav"))  # Using stop.wav for click
-        click_sound.set_volume(0.2)  # Lower volume for menu clicks
-    except Exception as e:
-        print(f"Warning: Could not load click sound: {e}")
-        click_sound = None
-    
-    # Load and play menu music
-    try:
-        pygame.mixer.music.load(os.path.join("assets", "music", "1-01-Title-Demo-_Departure-From-The.wav"))
-        pygame.mixer.music.set_volume(0.4)  # Lower volume for menu music
-        pygame.mixer.music.play(-1)
-    except Exception as e:
-        print(f"Warning: Could not load menu music: {e}")
-    
-    current_screen = "menu"
-    running = True
-    
-    while running:
-        if current_screen == "menu":
-            # Draw background
-            screen.blit(background, (0, 0))
-            
-            # Update button states
-            mouse_pos = pygame.mouse.get_pos()
-            slot_button.update(mouse_pos)
-            claw_button.update(mouse_pos)
-            
-            # Draw buttons
-            slot_button.draw(screen)
-            claw_button.draw(screen)
-            
-            # Draw title
-            font = pygame.font.Font(None, 48)
-            title = font.render("Pokemon Mini-Games", True, (255, 255, 255))
-            title_rect = title.get_rect(center=(400, 100))
-            screen.blit(title, title_rect)
-            
-            # Event handling
+    def run(self):
+        clock = pygame.time.Clock()
+        running = True
+        while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if slot_button.rect.collidepoint(event.pos):
-                        if click_sound:
-                            click_sound.play()
-                        current_screen = "slot"
-                        pygame.mixer.music.stop()  # Stop menu music
-                    elif claw_button.rect.collidepoint(event.pos):
-                        if click_sound:
-                            click_sound.play()
-                        current_screen = "claw"
-                        pygame.mixer.music.stop()  # Stop menu music
-        
-        elif current_screen == "slot":
-            next_screen = slot_machine.run()
-            if next_screen == "menu":
-                current_screen = "menu"
-                # Restart menu music
-                pygame.mixer.music.load(os.path.join("assets", "music", "1-01-Title-Demo-_Departure-From-The.wav"))
-                pygame.mixer.music.set_volume(0.4)
-                pygame.mixer.music.play(-1)
-                pygame.display.set_mode((800, 600))
-        
-        elif current_screen == "claw":
-            next_screen = claw_machine.run()
-            if next_screen == "menu":
-                current_screen = "menu"
-                # Restart menu music
-                pygame.mixer.music.load(os.path.join("assets", "music", "1-01-Title-Demo-_Departure-From-The.wav"))
-                pygame.mixer.music.set_volume(0.4)
-                pygame.mixer.music.play(-1)
-                pygame.display.set_mode((800, 600))
-        
-        pygame.display.flip()
-        clock.tick(60)
+                    return "quit"
+                
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:  # Left click
+                        for name, button in self.buttons.items():
+                            if button.handle_event(event):
+                                if name == "quit":
+                                    return "quit"
+                                return name
+                
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        return "quit"
+                
+                # Update button hover states
+                if event.type == pygame.MOUSEMOTION:
+                    for button in self.buttons.values():
+                        button.handle_event(event)
+            
+            self.draw(self.screen)
+            pygame.display.flip()
+            clock.tick(60)
+
+def main():
+    pygame.init()
+    pygame.display.set_caption("Pokemon Card Games")
     
-    pygame.quit()
-    sys.exit()
+    menu = None
+    slot_machine = None
+    claw_machine = None
+    screen = None
+    
+    try:
+        # Set up the display
+        screen = pygame.display.set_mode((800, 600))
+        current_screen = "menu"
+        
+        # Create game states
+        menu = MainMenu(screen)
+        
+        # Main game loop
+        running = True
+        while running:
+            try:
+                if current_screen == "menu":
+                    current_screen = menu.run()
+                elif current_screen == "slot":
+                    if slot_machine is None:
+                        slot_machine = SlotMachine(screen)
+                    current_screen = slot_machine.run()
+                    if current_screen != "slot":
+                        if slot_machine:
+                            try:
+                                slot_machine.cleanup()
+                            except Exception as e:
+                                print(f"Error cleaning up slot machine: {e}")
+                        slot_machine = None
+                elif current_screen == "claw":
+                    if claw_machine is None:
+                        claw_machine = ClawMachine(screen)
+                    current_screen = claw_machine.run()
+                    if current_screen != "claw":
+                        if claw_machine:
+                            try:
+                                claw_machine.cleanup()
+                            except Exception as e:
+                                print(f"Error cleaning up claw machine: {e}")
+                        claw_machine = None
+                elif current_screen == "quit":
+                    running = False
+                    break
+            except Exception as e:
+                print(f"Error in game loop: {e}")
+                current_screen = "menu"
+                if slot_machine:
+                    try:
+                        slot_machine.cleanup()
+                    except Exception as e:
+                        print(f"Error cleaning up slot machine: {e}")
+                    slot_machine = None
+                if claw_machine:
+                    try:
+                        claw_machine.cleanup()
+                    except Exception as e:
+                        print(f"Error cleaning up claw machine: {e}")
+                    claw_machine = None
+    
+    except Exception as e:
+        print(f"Critical error: {e}")
+    
+    finally:
+        # Cleanup in reverse order of creation
+        if claw_machine:
+            try:
+                claw_machine.cleanup()
+            except Exception as e:
+                print(f"Final claw machine cleanup error: {e}")
+        
+        if slot_machine:
+            try:
+                slot_machine.cleanup()
+            except Exception as e:
+                print(f"Final slot machine cleanup error: {e}")
+        
+        if menu:
+            try:
+                if hasattr(menu, 'cleanup'):
+                    menu.cleanup()
+            except Exception as e:
+                print(f"Final menu cleanup error: {e}")
+        
+        # Quit pygame
+        try:
+            pygame.quit()
+        except Exception as e:
+            print(f"Error quitting pygame: {e}")
+        
+        # Give pygame time to clean up
+        try:
+            time.sleep(0.1)
+        except:
+            pass
+        
+        # Exit
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()

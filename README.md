@@ -1,91 +1,131 @@
-# Pokemon Mini-Games Collection
+# 🎮 Pokemon Card Channel Mini-Games
 
-Eine Sammlung von Pokemon-themed Mini-Games für Community-Events und Challenges.
+Ein interaktives Mini-Game-System für unseren Pokemon-Karten YouTube Kanal, das durch spannende Challenges und Belohnungen die Community einbindet und für unvergessliche YouTube Shorts sorgt!
 
-## Features
+## 🌟 Features & Konzept
 
-### Slot Machine
-- 3-Slot Pokemon-themed Slot Machine mit modernem UI
-- Verschiedene Challenge-Level (Leicht, Mittel, Schwer)
-- Spezielle Lugia-Jackpot-Funktion für Community-Geschenke
-- Pokemon-Karten bezogene Challenges
-- Animierte Partikel-Effekte und Neon-Designs
-- Dynamische Sound-Effekte und Hintergrundmusik
+### 🎰 Slot Machine
+- **Challenge System**:
+  - Easy (1 Symbol): Common Karten Challenge
+  - Medium (2 Symbole): Rare Holo oder Ultra Rare Challenge
+  - Hard (3 Symbole): Special Illustration Rare Challenge
+  - Jackpot (3x Lugia): Community Event mit Booster Display oder SIR ex!
+- **Gewichtung & Fairness**:
+  - Lugia: 5% (Jackpot-Chance)
+  - Andere Symbole: Fair verteilt für regelmäßige Challenges
+- **Effekte**:
+  - Dynamische Partikel-Effekte
+  - Pokemon Soundtracks & Effekte
+  - Moderne UI mit Animationen und optimierten Schriftgrößen
 
-### Claw Machine
-- Interaktive Greifarm-Steuerung
-- Pokemon-Kapseln mit verschiedenen Schwierigkeitsgraden
-- Moderne UI mit Neon-Effekten und Gradienten
-- Partikel-Effekte für erfolgreiche Griffe
-- Sound-Effekte und thematische Hintergrundmusik
+### 🎮 Claw Machine
+- **Gameplay**:
+  - Skill-basierte Greifarm-Steuerung (Pfeiltasten + Leertaste)
+  - Pokemon-Kapseln verschiedener Seltenheit
+  - Neon-Design mit modernen Effekten
+- **Pokeball System**:
+  - Normal Ball (Easy): 40% Spawn, 80% Fangchance
+  - Hisuian Ball (Medium): 30% Spawn, 60% Fangchance
+  - Ultra Ball (Hard): 20% Spawn, 40% Fangchance
+  - Beast Ball (Special): 7% Spawn, 30% Fangchance
+  - Master Ball (Jackpot): 3% Spawn, 20% Fangchance
+- **Challenge System**:
+  - Individuelle Challenges pro Pokeball-Typ
+  - Spezielle Karten-Challenges
+  - Community Jackpot Events
 
-## Installation
+## 🎥 YouTube Integration
 
-1. Stellen Sie sicher, dass Python 3.x installiert ist
-2. Klonen Sie das Repository:
-```bash
-git clone https://github.com/relstar911/pokeminigames.git
-cd pokeminigames
-```
+### 📱 Shorts Features
+- **Automatische Highlights**:
+  - Jackpot-Momente
+  - Challenge-Erfolge
+  - Besondere Gewinne
+- **Community Events**:
+  - QR-Code Challenges in Videos
+  - Wöchentliche Spezial-Events
+  - Saisonale TCG Release Events
 
-3. Installieren Sie die erforderlichen Pakete:
+### 🏆 Belohnungssystem
+- **Tägliche Challenges**:
+  - Verbindung zu aktuellen Videos
+  - Spezielle Kartensets
+  - Community-Ziele
+- **Progression**:
+  - Level-System
+  - Freischaltbare Events
+  - Exklusive Belohnungen
+
+## 🚀 Installation
+
+1. Python 3.12+ installieren
+2. Repository klonen
+3. Dependencies installieren:
 ```bash
 pip install -r requirements.txt
 ```
-
-## Verwendung
-
-Starten Sie die Anwendung mit:
+4. Spiel starten:
 ```bash
 python main.py
 ```
 
-### Slot Machine
-- Klicken Sie auf "ROLL" um die Slots zu drehen
-- Verschiedene Pokemon-Kombinationen lösen unterschiedliche Challenges aus
-- Drei Lugia ergeben den Jackpot!
-
-### Claw Machine
-- Benutzen Sie die Pfeiltasten um den Greifarm zu bewegen
-- Drücken Sie die Leertaste oder den Drop-Button zum Greifen
-- Sammeln Sie Pokemon-Kapseln für spezielle Challenges
-
-## Verzeichnisstruktur
-
+## 📂 Verzeichnisstruktur
 ```
 pokeminigames/
 ├── assets/
-│   ├── music/         # Hintergrundmusik
-│   ├── sounds/        # Sound-Effekte
-│   ├── sprites/       # Pokemon-Sprites
-│   └── fonts/         # Spezielle Schriftarten
+│   ├── music/     # Pokemon Soundtracks
+│   ├── sounds/    # Spiel-Effekte
+│   ├── sprites/   # Pokemon-Bilder
+│   └── fonts/     # Pokemon Schriftart
 ├── games/
-│   ├── slot_machine.py    # Slot Machine Implementation
-│   ├── claw_machine.py    # Claw Machine Implementation
-│   └── constants.py       # Gemeinsame Konstanten
-└── main.py               # Hauptprogramm
+│   ├── slot_machine.py
+│   └── claw_machine.py
+├── utils/
+│   ├── constants.py
+│   ├── game_base.py
+│   └── ui_elements.py
+└── main.py
 ```
 
-## Sound-Credits
-- Hintergrundmusik: Pokemon Game Soundtracks
-- Sound-Effekte: Custom-designed für das Projekt
+## 🛠️ Development Status
 
-## Weiterentwicklung
+### Implementiert ✅
+- Basis Spielmechanik für beide Spiele
+- Sound & Partikel System
+- Challenge System mit verschiedenen Schwierigkeitsgraden
+- Moderne UI & Animationen
+- Optimiertes Font-System mit einheitlichen Größen
+- Pokeball-basiertes Challenge-System
+- Verbesserte Steuerung (Keyboard Support)
 
-- [ ] Weitere Mini-Games hinzufügen
-- [ ] Online-Highscore-System
-- [ ] Mehr Pokemon und Challenges
-- [ ] Erweiterte Sound-Effekte
-- [ ] Community-Features
+### In Entwicklung 🚧
+- YouTube API Integration
+- QR-Code Challenge System
+- Community Reward System
+- Erweiterte Shorts Features
+- Asset Management System
+- Persistentes Scoring System
 
-## Mitwirken
+## 🔜 Nächste Schritte
+1. **Kurzfristig**:
+   - Asset Management optimieren
+   - Fehlende Sprites hinzufügen
+   - Sound-System vervollständigen
+2. **Mittelfristig**:
+   - Challenge-System erweitern
+   - Persistentes Scoring implementieren
+   - YouTube Integration vorbereiten
+3. **Langfristig**:
+   - Community Features
+   - Cross-Platform Support
+   - Live-Stream Integration
 
-1. Fork das Projekt
-2. Erstelle einen Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit deine Änderungen (`git commit -m 'Add some AmazingFeature'`)
-4. Push zum Branch (`git push origin feature/AmazingFeature`)
-5. Öffne einen Pull Request
+## 📺 YouTube Kanal
+[Folge uns auf YouTube](https://youtube.com/@user) für:
+- Tägliche Pokemon Card Openings
+- Exklusive Challenges
+- Community Events
+- Special Giveaways
 
-## Lizenz
-
-Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe die [LICENSE](LICENSE) Datei für Details.
+## 📝 Lizenz
+Privates Projekt - Alle Rechte vorbehalten © 2024
