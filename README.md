@@ -2,7 +2,23 @@
 
 Eine interaktive Slot Machine für Pokemon-Karten Events, entwickelt mit Python und Pygame.
 
-## Features
+## 🎮 Installation & Start
+
+### Einfache Installation (Empfohlen)
+1. [Python herunterladen und installieren](https://www.python.org/downloads/)
+   - **WICHTIG:** Bei der Installation "Add Python to PATH" ankreuzen!
+2. [Spiel als ZIP herunterladen](https://github.com/relstar911/ArteusSlotMachine/archive/refs/heads/main.zip)
+3. ZIP-Datei entpacken
+4. `start_game.bat` doppelklicken
+
+### Alternative Installation (für Entwickler)
+```bash
+git clone https://github.com/relstar911/ArteusSlotMachine.git
+cd ArteusSlotMachine
+python main.py
+```
+
+## 🎯 Features
 
 - **Slot Machine Gameplay**
   - 3x3 Slot Machine mit Pokemon-Symbolen
@@ -20,36 +36,18 @@ Eine interaktive Slot Machine für Pokemon-Karten Events, entwickelt mit Python 
   - Scrollbare Eingabefelder
   - Speicherfunktion für Preise
 
-## Installation
-
-1. Python 3.8+ installieren
-2. Abhängigkeiten installieren:
-```bash
-pip install pygame
-```
-
-3. Repository klonen:
-```bash
-git clone https://github.com/relstar911/ArteusSlotMachine.git
-```
-
-4. Spiel starten:
-```bash
-python main.py
-```
-
-## Steuerung
+## 🎮 Steuerung
 
 - **Space**: Drehen der Walzen
 - **ESC**: Zurück zum Menü
 - **Maus**: UI Navigation
 
-## Preise Konfigurieren
+## ⚙️ Preise Konfigurieren
 
 1. Config-Button klicken
 2. Preise in die Felder eintragen
 3. Speichern-Button klicken
 
-## Credits
+## 📝 Credits
 
 Entwickelt von Arteus für Pokemon-Karten Events.
