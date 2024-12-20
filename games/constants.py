@@ -1,70 +1,94 @@
-# Pokemon TCG Sets
-BOOSTER_SETS = [
-    "Stellar Crown",
-    "Masquerade Twilights",
-    "Pokemon 151",
-    "Temporal Forces",
-    "Paradox Rift",
-    "Obsidian Flames",
-    "Paldea Evolved",
-    "Scarlet & Violet"
+# Current Main Hits (Can be updated per game)
+MAIN_HITS = [
+    "Charizard ex SAR",
+    "Pikachu SAR",
+    "Mew ex SAR",
+    "Rayquaza SAR"
 ]
 
-# Challenge databases
-EASY_CHALLENGES = [
-    "🎯 STARTER CHALLENGE\n• Finde eine Common Karte aus {set}\n• Perfekt für Anfänger!",
-    "✨ HOLO CHALLENGE\n• Finde eine Reverse Holo Karte aus {set}\n• Glänzende Belohnung!",
-    "⚡ ENERGY CHALLENGE\n• Finde eine Energy Karte aus {set}\n• Power up!",
-    "👥 TRAINER CHALLENGE\n• Finde eine Trainer Karte aus {set}\n• Strategische Wahl!",
-    "🔄 EVOLUTION CHALLENGE\n• Finde eine Stage 1 Pokemon Karte aus {set}\n• Zeit zum Entwickeln!"
+# Win Messages
+EASY_WINS = [
+    "🎯 GEWONNEN!\n• Ein japanisches Boosterpack\n• Viel Spaß beim Öffnen!",
+    "🎌 GLÜCKWUNSCH!\n• Ein japanisches Boosterpack\n• Direkt aus Japan für dich!",
+    "✨ SUPER!\n• Ein japanisches Boosterpack\n• Exklusive Karten warten!"
 ]
 
-MEDIUM_CHALLENGES = [
-    "🌟 HOLO RARE CHALLENGE\n• Finde eine Rare Holo Karte aus {set}\n• Seltener Glanz!",
-    "💫 ULTRA CHALLENGE\n• Finde eine Ultra Rare Karte aus {set}\n• Ultra selten!",
-    "🎨 ART CHALLENGE\n• Finde eine Illustration Rare aus {set}\n• Kunstvolle Karte!",
-    "⭐ EX CHALLENGE\n• Finde eine Pokemon ex Karte aus {set}\n• Extra stark!",
-    "👤 FULL ART CHALLENGE\n• Finde eine Full Art Trainer aus {set}\n• Volle Pracht!"
+MEDIUM_WINS = [
+    "🌟 GEWONNEN!\n• Eine Illustration Rare oder Secret Rare\n• Tolle Karte!",
+    "💫 GLÜCKWUNSCH!\n• Eine Illustration Rare oder Secret Rare\n• Wunderschönes Artwork!",
+    "⭐ SUPER!\n• Eine Illustration Rare oder Secret Rare\n• Seltene Belohnung!"
 ]
 
-HARD_CHALLENGES = [
-    "🖼️ SPECIAL ART CHALLENGE\n• Finde eine Special Illustration Rare aus {set}\n• Meisterwerk!",
-    "🎭 ALT ART CHALLENGE\n• Finde eine Alternative Art Rare aus {set}\n• Einzigartig!",
-    "💎 SPECIAL EX CHALLENGE\n• Finde eine Special Illustration Rare ex aus {set}\n• Absolute Rarität!",
-    "🌈 HYPER CHALLENGE\n• Finde eine Hyper Rare Karte aus {set}\n• Hyper selten!",
-    "🏆 GOLD CHALLENGE\n• Finde eine Gold Rare Karte aus {set}\n• Pure Eleganz!"
+HARD_WINS = [
+    "🏆 MEGA GEWINN!\n• {hit}\n• Absoluter Top-Hit!",
+    "💎 JACKPOT!\n• {hit}\n• Fantastischer Gewinn!",
+    "✨ WAHNSINN!\n• {hit}\n• Was für ein Hit!"
 ]
 
-COMMUNITY_PRESENTS = [
-    "🎁 PREMIUM DISPLAY\n• Ein signiertes Pokemon Display deiner Wahl\n• Direkt vom Hersteller!",
-    "📦 ELITE BOX\n• Ein Elite Trainer Box deiner Wahl\n• Mit allen Extras!",
-    "💫 MASTER SET\n• Ein komplettes Master-Set eines Pokemon Sets\n• 100% Vollständig!",
-    "🎮 ONLINE CODES\n• Ein Jahr gratis Pokemon TCG Live Codes\n• Digital sammeln!",
-    "🧸 PLÜSCHTIER\n• Ein Pokemon Center Plüschtier deiner Wahl\n• Super kuschelig!",
-    "🎌 JAPAN DISPLAY\n• Ein japanisches Display deiner Wahl\n• Direkt aus Japan!",
-    "💎 PSA KARTE\n• Eine PSA 10 Karte im Wert von 100€\n• Perfekter Zustand!",
-    "📚 SAMMLERALBUM\n• Ein Pokemon TCG Sammleralbum mit 25 Boostern\n• Sofort loslegen!",
-    "🎯 STARTER SET\n• Ein Set aller Pokemon Starter-Decks\n• Perfekt zum Start!",
-    "🌟 EXCLUSIVE\n• Ein Pokemon Center Exclusive Product\n• Streng limitiert!"
+COMMUNITY_JACKPOT = [
+    "🎉 COMMUNITY GIVEAWAY!\n• Ein glücklicher Zuschauer gewinnt\n• Teilnahme im Giveaway!",
+    "🌟 MEGA GIVEAWAY!\n• Gewinnspiel startet jetzt\n• Alle können mitmachen!",
+    "🏆 COMMUNITY EVENT!\n• Großes Gewinnspiel\n• Sei dabei und gewinne!"
 ]
-
-# Claw Machine Constants
-CLAW_SPEED = 5
-CLAW_DROP_SPEED = 8
-CLAW_GRAB_RADIUS = 50
-
-# Pokeball Types and Rarities
-POKEBALL_TYPES = {
-    'normal': {'chance': 0.4, 'value': 1},
-    'great': {'chance': 0.3, 'value': 2},
-    'ultra': {'chance': 0.2, 'value': 3},
-    'master': {'chance': 0.1, 'value': 4}
-}
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
-BLUE = (0, 0, 255)
+BLUE = (50, 150, 255)
 GREEN = (0, 255, 0)
-GRAY = (128, 128, 128)
+YELLOW = (255, 255, 0)
+PURPLE = (147, 112, 219)
+ORANGE = (255, 165, 0)
+GOLD = (255, 215, 0)
+
+# Screen dimensions
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+
+# Game settings
+FPS = 60
+DEFAULT_SOUND_VOLUME = 0.5
+DEFAULT_MUSIC_VOLUME = 0.3
+
+# UI Settings
+BUTTON_HEIGHT = 50
+BUTTON_WIDTH = 200
+BUTTON_RADIUS = 12
+
+# Asset paths
+ASSETS_DIR = 'assets'
+SOUND_DIR = 'assets/sounds'
+MUSIC_DIR = 'assets/music'
+SPRITE_DIR = 'assets/sprites'
+FONT_DIR = 'assets/fonts'
+
+# Sound files
+SOUND_FILES = {
+    'spin': 'spin.wav',
+    'stop': 'stop.wav',
+    'win': 'win.wav',
+    'jackpot': 'jackpot.wav',
+    'click': 'click.wav'
+}
+
+# Music files
+MUSIC_FILES = {
+    'slot': '1-11-Route-101.wav'
+}
+
+# Font files
+FONT_FILES = {
+    'pokemon': 'Pokemon Solid.ttf'
+}
+
+# Animation settings
+PARTICLE_MAX = 100
+PARTICLE_LIFETIME = 1.0
+PARTICLE_SIZE = 3
+TRANSITION_SPEED = 10
+
+# Slot Machine settings
+SLOT_SYMBOLS = ['Charizard', 'Lugia', 'Tyranitar', 'Gengar', 'Oshawott', 'Arcanine']
+SLOT_WEIGHTS = [10, 25, 15, 15, 15, 20]  # Corresponding weights for symbols (Total: 100)
+# Lugia (Jackpot): 25% chance per slot = ~1.5% chance for jackpot = average 1 jackpot per ~65 spins

@@ -1,5 +1,10 @@
+from pygame.locals import *
 import pygame
+import sys
+import math
+from utils.constants import *
 from utils.font_manager import FontManager
+from games.prizes import JACKPOT_PRIZE, MAIN_PRIZES, DOUBLE_PRIZES, EASY_PRIZES
 
 class Button:
     def __init__(self, x, y, width, height, text='', color=(170, 170, 170), hover_color=(200, 200, 200), text_color=(255, 255, 255), font=None):
@@ -8,41 +13,28 @@ class Button:
         self.hover_color = hover_color
         self.text = text
         self.text_color = text_color
-        self.font_manager = FontManager()
-        self.font = font if font else self.font_manager.get_font('normal')  # Use provided font or default
+        self.font = font
         self.is_hovered = False
-        self.disabled = False
-        self.disabled_color = (100, 100, 100)
-        self.disabled_text_color = (160, 160, 160)
         
-    def draw(self, screen):
-        if self.disabled:
-            color = self.disabled_color
-            text_color = self.disabled_text_color
-        else:
-            color = self.hover_color if self.is_hovered else self.color
-            text_color = self.text_color
-            
-        pygame.draw.rect(screen, color, self.rect, border_radius=12)
-        pygame.draw.rect(screen, (0, 0, 0), self.rect, 2, border_radius=12)  # Border
-        
-        if self.text:
-            text_surface = self.font.render(self.text, True, text_color)
-            text_rect = text_surface.get_rect(center=self.rect.center)
-            screen.blit(text_surface, text_rect)
-    
     def handle_event(self, event):
-        if self.disabled:
-            return False
-            
         if event.type == pygame.MOUSEMOTION:
             self.is_hovered = self.rect.collidepoint(event.pos)
-            return False
-        
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.is_hovered:
-                return True
+            return self.is_hovered
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:  # Left click
+                return self.rect.collidepoint(event.pos)
         return False
+        
+    def draw(self, screen):
+        color = self.hover_color if self.is_hovered else self.color
+        pygame.draw.rect(screen, color, self.rect, border_radius=12)
+        pygame.draw.rect(screen, (255, 255, 255), self.rect, 2, border_radius=12)  # White border
+        
+        if self.text != '':
+            if self.font:
+                text_surface = self.font.render(self.text, True, self.text_color)
+                text_rect = text_surface.get_rect(center=self.rect.center)
+                screen.blit(text_surface, text_rect)
 
 class TextDisplay:
     def __init__(self, x, y, text='', color=(255, 255, 255), size='normal'):
@@ -270,7 +262,18 @@ class InfoBox:
         if event.type == pygame.MOUSEWHEEL:
             self.scroll_offset = max(0, min(self.max_scroll, 
                                           self.scroll_offset - event.y * self.line_height))
-    
+                                          
+    def handle_event(self, event):
+        """Handle all events for the info box"""
+        if not self.visible:
+            return False
+            
+        if event.type == pygame.MOUSEWHEEL:
+            self.handle_scroll(event)
+            return True
+            
+        return False
+        
     def update(self):
         """Update method for compatibility with slot machine"""
         pass
@@ -300,3 +303,250 @@ class InfoBox:
                 text_surface = text_font.render(text, True, color)
                 screen.blit(text_surface, (self.x + 20, content_y))
             content_y += self.line_height
+
+class InputField:
+    def __init__(self, x, y, width, height, label, font):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.label = label
+        self.text = ''
+        self.font = font
+        
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                return True
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                return False
+            elif event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            else:
+                self.text += event.unicode
+            return True
+        return False
+        
+    def draw(self, screen, active=False):
+        color = (200, 200, 255) if active else (255, 255, 255)
+        pygame.draw.rect(screen, color, self.rect)
+        pygame.draw.rect(screen, (0, 0, 0), self.rect, 1)
+        
+        label_surface = self.font.render(self.label, True, (0, 0, 0))
+        screen.blit(label_surface, (self.rect.x, self.rect.y - 20))
+        
+        if self.text:
+            text_surface = self.font.render(self.text, True, (0, 0, 0))
+            text_rect = text_surface.get_rect(midleft=(self.rect.x + 5, self.rect.centery))
+            screen.blit(text_surface, text_rect)
+
+class PrizeConfig:
+    def __init__(self, x, y, width, height, font):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.font = font
+        self.visible = False
+        self.active_field = None
+        self.scroll_y = 0
+        self.max_scroll = 0
+        
+        # Text input fields
+        self.fields = {
+            'jackpot': {'text': JACKPOT_PRIZE, 'label': 'Lugia Jackpot:'},
+            'main1': {'text': MAIN_PRIZES[0] if MAIN_PRIZES else '', 'label': 'Gengar Preis:'},
+            'main2': {'text': MAIN_PRIZES[1] if len(MAIN_PRIZES) > 1 else '', 'label': 'Tyranitar Preis:'},
+            'main3': {'text': MAIN_PRIZES[2] if len(MAIN_PRIZES) > 2 else '', 'label': 'Dragoran Preis:'},
+            'main4': {'text': MAIN_PRIZES[3] if len(MAIN_PRIZES) > 3 else '', 'label': 'Despotar Preis:'},
+            'main5': {'text': MAIN_PRIZES[4] if len(MAIN_PRIZES) > 4 else '', 'label': 'Glurak Preis:'},
+            'double1': {'text': DOUBLE_PRIZES[0] if DOUBLE_PRIZES else '', 'label': '2x Gleiche Preis 1:'},
+            'double2': {'text': DOUBLE_PRIZES[1] if len(DOUBLE_PRIZES) > 1 else '', 'label': '2x Gleiche Preis 2:'},
+            'double3': {'text': DOUBLE_PRIZES[2] if len(DOUBLE_PRIZES) > 2 else '', 'label': '2x Gleiche Preis 3:'},
+            'easy1': {'text': EASY_PRIZES[0] if EASY_PRIZES else '', 'label': 'Kein Match Preis 1:'},
+            'easy2': {'text': EASY_PRIZES[1] if len(EASY_PRIZES) > 1 else '', 'label': 'Kein Match Preis 2:'}
+        }
+        
+        # Calculate field positions and max scroll
+        y_offset = 80  # Start weiter unten für Labels
+        for field in self.fields.values():
+            field['rect'] = pygame.Rect(x + 20, y + y_offset, width - 40, 30)
+            y_offset += 65  # Mehr Platz zwischen den Feldern für Labels
+        
+        # Calculate max scroll
+        self.max_scroll = max(0, y_offset - height + 60)
+        
+        # Save button
+        self.save_button = Button(
+            x + width//4,
+            y + height - 60,
+            width//2,
+            40,
+            "SPEICHERN",
+            color=(0, 200, 0),
+            hover_color=(0, 255, 0),
+            font=font
+        )
+        
+    def handle_event(self, event):
+        if not self.visible:
+            return False
+            
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            
+            # Handle scrolling
+            if event.button == 4:  # Mouse wheel up
+                self.scroll_y = max(0, self.scroll_y - 20)
+                return True
+            elif event.button == 5:  # Mouse wheel down
+                self.scroll_y = min(self.max_scroll, self.scroll_y + 20)
+                return True
+            
+            # Adjust mouse position for scroll
+            adjusted_pos = (mouse_pos[0], mouse_pos[1] + self.scroll_y)
+            
+            # Check save button
+            if self.save_button.rect.collidepoint(mouse_pos):
+                self.save_prizes()
+                self.visible = False
+                return True
+                
+            # Check text fields
+            for name, field in self.fields.items():
+                scroll_adjusted_rect = field['rect'].copy()
+                scroll_adjusted_rect.y -= self.scroll_y
+                if scroll_adjusted_rect.collidepoint(mouse_pos):
+                    self.active_field = name
+                    return True
+                    
+            # Click outside fields = deactivate
+            self.active_field = None
+            
+        elif event.type == pygame.KEYDOWN and self.active_field:
+            if event.key == pygame.K_RETURN:
+                self.active_field = None
+            elif event.key == pygame.K_BACKSPACE:
+                self.fields[self.active_field]['text'] = self.fields[self.active_field]['text'][:-1]
+            elif event.key == pygame.K_ESCAPE:
+                self.visible = False
+            else:
+                self.fields[self.active_field]['text'] += event.unicode
+            return True
+            
+        return False
+        
+    def save_prizes(self):
+        """Save the configured prizes to prizes.py"""
+        try:
+            with open('games/prizes.py', 'w', encoding='utf-8') as f:
+                f.write("# Preise für die Slot Machine\n")
+                f.write("# Diese Listen können vor dem Stream angepasst werden\n\n")
+                
+                # Save jackpot prize
+                f.write("# Hauptpreis (3x Lugia)\n")
+                f.write(f'JACKPOT_PRIZE = "{self.fields["jackpot"]["text"]}"\n\n')
+                
+                # Save main prizes
+                f.write("# Preise für 3 gleiche Symbole (außer Lugia)\n")
+                f.write("MAIN_PRIZES = [\n")
+                for i in range(1, 6):
+                    text = self.fields[f'main{i}']['text']
+                    if text:
+                        f.write(f'    "{text}",\n')
+                f.write("]\n\n")
+                
+                # Save double prizes (2x gleiche)
+                f.write("# Preise für 2 gleiche Symbole\n")
+                f.write("DOUBLE_PRIZES = [\n")
+                for i in range(1, 4):
+                    text = self.fields[f'double{i}']['text']
+                    if text:
+                        f.write(f'    "{text}",\n')
+                f.write("]\n\n")
+                
+                # Save easy prizes
+                f.write("# Preise für keine Übereinstimmungen\n")
+                f.write("EASY_PRIZES = [\n")
+                for i in range(1, 3):
+                    text = self.fields[f'easy{i}']['text']
+                    if text:
+                        f.write(f'    "{text}",\n')
+                f.write("]\n")
+                
+        except Exception as e:
+            print(f"Error saving prizes: {str(e)}")
+            
+    def get_prizes(self):
+        """Get all prizes from input fields"""
+        prizes = {
+            'jackpot': self.fields['jackpot']['text'],
+            'main': [
+                self.fields['main1']['text'],
+                self.fields['main2']['text'],
+                self.fields['main3']['text'],
+                self.fields['main4']['text'],
+                self.fields['main5']['text']
+            ],
+            'double': [
+                self.fields['double1']['text'],
+                self.fields['double2']['text'],
+                self.fields['double3']['text']
+            ],
+            'easy': [
+                self.fields['easy1']['text'],
+                self.fields['easy2']['text']
+            ]
+        }
+        
+        # Filter out empty strings
+        prizes['main'] = [p for p in prizes['main'] if p]
+        prizes['double'] = [p for p in prizes['double'] if p]
+        prizes['easy'] = [p for p in prizes['easy'] if p]
+        
+        return prizes
+        
+    def draw(self, screen):
+        if not self.visible:
+            return
+            
+        # Draw background
+        pygame.draw.rect(screen, (240, 240, 240), self.rect)
+        pygame.draw.rect(screen, (0, 0, 0), self.rect, 2)  # Border
+        
+        # Draw title
+        title = self.font.render("Preise Konfigurieren", True, (0, 0, 0))
+        title_rect = title.get_rect(centerx=self.rect.centerx, top=self.rect.top + 20)
+        screen.blit(title, title_rect)
+        
+        # Draw fields
+        for name, field in self.fields.items():
+            # Only draw if field is visible (accounting for scroll)
+            field_rect = field['rect'].copy()
+            field_rect.y -= self.scroll_y
+            
+            if field_rect.bottom > self.rect.top and field_rect.top < self.rect.bottom:
+                # Draw label
+                label = self.font.render(field['label'], True, (0, 0, 0))
+                screen.blit(label, (field_rect.x + 5, field_rect.y - 35))  # Label weiter oben
+                
+                # Draw input box
+                color = (200, 200, 255) if name == self.active_field else (255, 255, 255)
+                pygame.draw.rect(screen, color, field_rect)
+                pygame.draw.rect(screen, (0, 0, 0), field_rect, 1)
+                
+                # Draw text
+                if field['text']:
+                    text = self.font.render(field['text'], True, (0, 0, 0))
+                    text_rect = text.get_rect(midleft=(field_rect.x + 5, field_rect.centery))
+                    screen.blit(text, text_rect)
+        
+        # Draw save button
+        self.save_button.draw(screen)
+        
+    def update(self):
+        """Update method for compatibility with slot machine"""
+        pass
+
+class Slot:
+    def __init__(self, x, y, size):
+        self.rect = pygame.Rect(x, y, size, size)
+        self.symbol = 0  # Default symbol index
+        
+    def update(self):
+        pass
