@@ -1,5 +1,6 @@
 import pygame
 import os
+import sys
 
 class FontManager:
     _instance = None
@@ -46,15 +47,25 @@ class FontManager:
     def initialize(self):
         """Load Pokemon font in all sizes"""
         try:
-            if os.path.exists("assets/fonts/PocketMonk-15ze.ttf"):
+            # Get the base path for assets
+            if getattr(sys, 'frozen', False):
+                # Running as compiled executable
+                base_path = sys._MEIPASS
+            else:
+                # Running in development
+                base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            
+            font_path = os.path.join(base_path, 'assets', 'fonts', 'PocketMonk-15ze.ttf')
+            
+            if os.path.exists(font_path):
                 pokemon_fonts = {
-                    size_name: pygame.font.Font("assets/fonts/PocketMonk-15ze.ttf", size)
+                    size_name: pygame.font.Font(font_path, size)
                     for size_name, size in self.font_sizes.items()
                 }
                 self.fonts.update(pokemon_fonts)
                 print("Pokemon font loaded successfully")
             else:
-                print("Pokemon font file not found")
+                print(f"Pokemon font file not found at: {font_path}")
         except Exception as e:
             print(f"Error loading Pokemon font: {e}")
     

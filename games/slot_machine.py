@@ -5,11 +5,12 @@ import math
 import time
 from utils.constants import *
 from utils.font_manager import FontManager
-from utils.ui_elements import Button, InfoBox, PrizeConfig, ParticleSystem, Slot
+from utils.ui_elements import Button, InfoBox, PrizeConfig, ParticleSystem, Slot, WonPrizesList
 from games.prizes import JACKPOT_PRIZE, MAIN_PRIZES, DOUBLE_PRIZES, EASY_PRIZES
 from utils.sound_manager import SoundManager
 from utils.game_base import BaseGame
 from games.constants import MAIN_HITS, EASY_WINS, MEDIUM_WINS, HARD_WINS, COMMUNITY_JACKPOT
+import sys
 
 class SlotMachine(BaseGame):
     def __init__(self, screen):
@@ -28,6 +29,7 @@ class SlotMachine(BaseGame):
         self.flash_effect = 0
         self.current_challenge = None
         self.challenges_completed = set()
+        self.spin_count = 0  # Zähler für Spins
         
         # Initialize UI elements first
         self.init_ui()
@@ -46,17 +48,25 @@ class SlotMachine(BaseGame):
         self.flash_effect = 0
         self.current_challenge = None
         self.challenges_completed = set()
+        self.spin_count = 0  # Reset Zähler für Spins
         if hasattr(self, 'particle_system'):
             self.particle_system.clear()
         
     def init_resources(self):
         """Initialize all game resources"""
         # Symbols setup
-        self.SYMBOLS = ['Charizard', 'Lugia', 'Tyranitar', 'Gengar', 'Oshawott', 'Arcanine']
-        self.WEIGHTS = [10, 3, 12, 25, 25, 25]  # Summe: 100
+        self.SYMBOLS = ['Lugia', 'Charizard', 'Tyranitar', 'Gengar', 'Oshawott', 'Arcanine']
+        # Neue Gewichtungen (Total: 100)
+        self.WEIGHTS = [5,      # Lugia (5%) - Realistischer
+                       23,      # Charizard (23%)
+                       23,      # Tyranitar (23%)
+                       23,      # Gengar (23%)
+                       13,      # Oshawott (13%)
+                       13]      # Arcanine (13%)
         
         # Initialize fonts
         self.title_font = self.font_manager.get_font('title')
+        self.normal_font = self.font_manager.get_font('normal')
         
         # Initialize managers
         self.sound_manager = SoundManager()
@@ -66,7 +76,15 @@ class SlotMachine(BaseGame):
         self.sprites = {}
         for symbol in self.SYMBOLS:
             try:
-                sprite_path = os.path.join('assets', 'sprites', f'{symbol.lower()}.png')
+                # Get the base path for assets
+                if getattr(sys, 'frozen', False):
+                    # Running as compiled executable
+                    base_path = sys._MEIPASS
+                else:
+                    # Running in development
+                    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                
+                sprite_path = os.path.join(base_path, 'assets', 'sprites', f'{symbol.lower()}.png')
                 self.sprites[symbol] = pygame.image.load(sprite_path).convert_alpha()
             except Exception as e:
                 print(f"Error loading sprite {symbol}: {str(e)}")
@@ -82,10 +100,7 @@ class SlotMachine(BaseGame):
             'jackpot': 'jackpot.wav'
         }
         for name, file in sound_files.items():
-            try:
-                self.sound_manager.load_sound(name, f'assets/sounds/{file}')
-            except Exception as e:
-                print(f"Error loading sound {name}: {str(e)}")
+            self.sound_manager.load_sound(name, file)
         
         # Set title font from font manager
         self.title_font = self.font_manager.get_font('huge')  # Use huge size for title
@@ -93,15 +108,38 @@ class SlotMachine(BaseGame):
         # Load and scale sprites
         for symbol in self.SYMBOLS:
             try:
-                sprite_path = os.path.join('assets', 'sprites', f'{symbol.lower()}.png')
+                # Get the base path for assets
+                if getattr(sys, 'frozen', False):
+                    # Running as compiled executable
+                    base_path = sys._MEIPASS
+                else:
+                    # Running in development
+                    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                
+                sprite_path = os.path.join(base_path, 'assets', 'sprites', f'{symbol.lower()}.png')
                 sprite = pygame.image.load(sprite_path).convert_alpha()
                 self.sprites[symbol] = pygame.transform.scale(sprite, (130, 130))
             except Exception as e:
                 print(f"Error loading sprite {symbol}: {e}")
         
         # Start background music
-        self.sound_manager.load_music('background', 'assets/music/1-11-Route-101.wav')
-        self.sound_manager.play_music('background', -1)
+        self.sound_manager.load_music('background', '1-11-Route-101.wav')
+        self.sound_manager.play_music('background')
+        
+        # Initialize prize list
+        self.won_prizes_list = WonPrizesList(
+            20,                 # x position
+            100,               # y position
+            200,               # width
+            SCREEN_HEIGHT - 200, # height
+            self.normal_font
+        )
+        self.won_prizes_list.slot_machine = self  # Setze Referenz zur SlotMachine
+        self.won_prizes_list.load_prizes()
+        
+        # Update positions based on screen size
+        if hasattr(self, 'scale_x'):
+            self.won_prizes_list.update_position(self.scale_x, self.scale_y)
         
     def init_ui(self):
         """Initialize all UI elements"""
@@ -109,15 +147,9 @@ class SlotMachine(BaseGame):
         button_width = 150
         button_height = 50
         padding = 20
-        
-        # Calculate button positions for even spacing
-        total_width = SCREEN_WIDTH - (2 * padding)  # Total available width
-        button_spacing = (total_width - (4 * button_width)) // 3  # Space between buttons
-        
-        # Y position for all buttons
+        button_spacing = 20
         button_y = SCREEN_HEIGHT - button_height - padding
         
-        # Create buttons with even spacing
         self.back_button = Button(
             padding,  # Left-most button
             button_y,
@@ -178,12 +210,13 @@ class SlotMachine(BaseGame):
         # Create info box with responsive size
         info_width = int(SCREEN_WIDTH * 0.5)  # 50% of screen width
         info_height = int(SCREEN_HEIGHT * 0.6)  # 60% of screen height
+        info_x = (SCREEN_WIDTH - info_width) // 2
+        info_y = (SCREEN_HEIGHT - info_height) // 2
+        
         self.info_box = InfoBox(
-            SCREEN_WIDTH//2 - info_width//2,
-            SCREEN_HEIGHT//2 - info_height//2,
-            info_width,
-            info_height,
-            "Spielregeln",
+            info_x, info_y,
+            info_width, info_height,
+            "Information",
             font=self.font_manager.get_font('normal')
         )
         
@@ -213,28 +246,31 @@ class SlotMachine(BaseGame):
             ("• SPACE: Drehen der Walzen", (200, 200, 200)),
             ("• ESC: Zurück zum Menü", (200, 200, 200)),
             ("", white),
-            ("💫 GEWINNE", white),
+            ("💫 GEWINNE & CHANCEN", white),
             ("• Verschiedene Symbole", easy_color),
             ("  1x Japanisches Boosterpack", (200, 200, 200)),
             ("", white),
             ("• 2x Gleiche Symbole", medium_color),
             ("  70% = 3x Japanische Booster", (200, 200, 200)),
             ("  30% = Illustration/Secret Rare", (200, 200, 200)),
+            ("  Chance: ~48% (Fast jeder 2. Spin)", (180, 180, 180)),
             ("", white),
             ("• 3x Gleiche Symbole", hard_color),
             ("  Pokemon Karte im Wert", (200, 200, 200)),
             ("  von bis zu 25€!", (200, 200, 200)),
+            ("  Chance: ~4% (Etwa alle 25 Spins)", (180, 180, 180)),
             ("", white),
             ("🏆 HAUPTGEWINN", jackpot_color),
             ("• 3x Lugia = Hauptpreis", (255, 223, 0)),
             ("• Aktuell:", (255, 223, 0)),
             (f"  {JACKPOT_PRIZE}", (255, 223, 0)),
+            ("  Chance: ~0.01% (Etwa alle 125 Spins)", (255, 223, 0)),
             ("", white),
             ("💡 TIPP", white),
             ("Jeder Spin gewinnt mindestens", (200, 200, 200)),
             ("ein japanisches Boosterpack!", (200, 200, 200))
         ])
-
+        
     def process_event(self, event):
         """Handle all game events"""
         if event.type == pygame.QUIT:
@@ -263,6 +299,9 @@ class SlotMachine(BaseGame):
                         global EASY_PRIZES
                         EASY_PRIZES[:] = prizes['easy']
                 return
+                
+            if self.won_prizes_list.handle_event(event):
+                return True
                 
             if self.spin_button.handle_event(event):
                 if not self.prize_config.visible:
@@ -299,15 +338,27 @@ class SlotMachine(BaseGame):
             if event.key == pygame.K_SPACE:
                 if not self.prize_config.visible:
                     self.start_spin()
+            elif event.key == pygame.K_F11:  # F11 für Vollbild
+                self.is_fullscreen = not self.is_fullscreen
+                self.init_display()
             elif event.key == pygame.K_ESCAPE:
                 self.running = False
                 
         elif event.type == pygame.MOUSEWHEEL:
             if self.info_box.visible:
                 self.info_box.handle_event(event)
+        elif event.type == pygame.VIDEORESIZE and not self.is_fullscreen:
+            self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+            self.actual_width = event.w
+            self.actual_height = event.h
+            self.scale_x = self.actual_width / SCREEN_WIDTH
+            self.scale_y = self.actual_height / SCREEN_HEIGHT
+            self.init_resources()
+            return True
 
     def start_spin(self):
         if not self.rolling:
+            self.spin_count += 1  # Erhöhe Zähler bei jedem Spin
             self.rolling = True
             self.roll_time = 0
             self.current_challenge = None
@@ -340,18 +391,23 @@ class SlotMachine(BaseGame):
             counts[symbol] = counts.get(symbol, 0) + 1
             
         # Check for 3 Lugia (Jackpot)
-        if counts.get(0, 0) == 3:
+        if counts.get(0, 0) == 3:  # Lugia ist Index 0
             self.sound_manager.play_sound('jackpot')
             self.create_win_effects()
-            return f" HAUPTGEWINN!\n• {JACKPOT_PRIZE}\n• Herzlichen Glückwunsch!"
+            win_text = f" HAUPTGEWINN!\n• {JACKPOT_PRIZE}\n• Herzlichen Glückwunsch!"
+            self.won_prizes_list.add_prize(f"Jackpot: {JACKPOT_PRIZE}")
+            return win_text
             
         # Check for 3 of any other symbol
         for symbol, count in counts.items():
-            if count == 3 and symbol != 0:
-                prize = MAIN_PRIZES[symbol - 1] if MAIN_PRIZES else "Kein Preis konfiguriert"
+            if count == 3:
+                prize = MAIN_PRIZES[symbol - 1] if symbol > 0 and symbol <= len(MAIN_PRIZES) else "Kein Preis konfiguriert"
                 self.sound_manager.play_sound('win')
                 self.create_win_effects()
-                return f" SUPER GEWINN!\n• {prize}\n• Tolle Karte!"
+                symbol_name = self.SYMBOLS[symbol]
+                win_text = f" SUPER GEWINN!\n• 3x {symbol_name}\n• {prize}"
+                self.won_prizes_list.add_prize(f"{symbol_name}: {prize}")
+                return win_text
                 
         # Check for 2 of any symbol
         for symbol, count in counts.items():
@@ -413,7 +469,7 @@ class SlotMachine(BaseGame):
             title_y = int(SCREEN_HEIGHT * 0.1)  # 10% from top
             
             # Draw title with glow effect
-            title = self.title_font.render("Pokémon Card Challenge", True, GOLD)
+            title = self.title_font.render("Arteus Pokémon Slot", True, GOLD)
             title_rect = title.get_rect(center=(SCREEN_WIDTH//2, title_y))
             
             # Add title glow effect
@@ -432,7 +488,7 @@ class SlotMachine(BaseGame):
             
             # Draw slot machine
             for i in range(3):
-                slot_x = SCREEN_WIDTH//2 + (i-1)*slot_spacing
+                slot_x = SCREEN_WIDTH//2 - slot_spacing + 150 + (i-1)*slot_spacing
                 
                 # Add shake effect
                 if self.shake_offset:
@@ -495,6 +551,9 @@ class SlotMachine(BaseGame):
                 self.info_button.draw(self.screen)
             if hasattr(self, 'config_button'):
                 self.config_button.draw(self.screen)
+            
+            # Draw won prizes list
+            self.won_prizes_list.draw(self.screen)
             
             # Draw info box if visible
             if hasattr(self, 'info_box') and self.info_box.visible:

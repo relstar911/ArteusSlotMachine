@@ -1,3 +1,6 @@
 @echo off
+echo Installing required packages...
+python -m pip install -r requirements.txt
+echo Starting Pokemon Slot Machine...
 python main.py
 pause

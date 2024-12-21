@@ -288,13 +288,13 @@ class InfoBox:
         
         # Draw box background
         box_rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(screen, (240, 240, 240, 230), box_rect)
+        pygame.draw.rect(screen, (240, 240, 240), box_rect)
         pygame.draw.rect(screen, (0, 0, 0), box_rect, 2)
         
         # Draw title
-        title_surface = title_font.render(self.title, True, (0, 0, 0))
-        title_rect = title_surface.get_rect(centerx=self.x + self.width//2, top=self.y + 10)
-        screen.blit(title_surface, title_rect)
+        title = self.font.render(self.title, True, (0, 0, 0))
+        title_rect = title.get_rect(centerx=self.x + self.width//2, top=self.y + 10)
+        screen.blit(title, title_rect)
         
         # Draw text content
         content_y = self.y + 50 - self.scroll_offset
@@ -350,11 +350,11 @@ class PrizeConfig:
         # Text input fields
         self.fields = {
             'jackpot': {'text': JACKPOT_PRIZE, 'label': 'Lugia Jackpot:'},
-            'main1': {'text': MAIN_PRIZES[0] if MAIN_PRIZES else '', 'label': 'Gengar Preis:'},
+            'main1': {'text': MAIN_PRIZES[0] if MAIN_PRIZES else '', 'label': 'Charizard Preis:'},
             'main2': {'text': MAIN_PRIZES[1] if len(MAIN_PRIZES) > 1 else '', 'label': 'Tyranitar Preis:'},
-            'main3': {'text': MAIN_PRIZES[2] if len(MAIN_PRIZES) > 2 else '', 'label': 'Dragoran Preis:'},
-            'main4': {'text': MAIN_PRIZES[3] if len(MAIN_PRIZES) > 3 else '', 'label': 'Despotar Preis:'},
-            'main5': {'text': MAIN_PRIZES[4] if len(MAIN_PRIZES) > 4 else '', 'label': 'Glurak Preis:'},
+            'main3': {'text': MAIN_PRIZES[2] if len(MAIN_PRIZES) > 2 else '', 'label': 'Gengar Preis:'},
+            'main4': {'text': MAIN_PRIZES[3] if len(MAIN_PRIZES) > 3 else '', 'label': 'Oshawott Preis:'},
+            'main5': {'text': MAIN_PRIZES[4] if len(MAIN_PRIZES) > 4 else '', 'label': 'Arcanine Preis:'},
             'double1': {'text': DOUBLE_PRIZES[0] if DOUBLE_PRIZES else '', 'label': '2x Gleiche Preis 1:'},
             'double2': {'text': DOUBLE_PRIZES[1] if len(DOUBLE_PRIZES) > 1 else '', 'label': '2x Gleiche Preis 2:'},
             'double3': {'text': DOUBLE_PRIZES[2] if len(DOUBLE_PRIZES) > 2 else '', 'label': '2x Gleiche Preis 3:'},
@@ -550,3 +550,136 @@ class Slot:
         
     def update(self):
         pass
+
+class WonPrizesList:
+    def __init__(self, x, y, width, height, font):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.font = font
+        self.visible = True
+        self.scroll_y = 0
+        self.max_scroll = 0
+        self.line_height = 25
+        self.won_prizes = []
+        
+    def add_prize(self, prize_text):
+        """Füge einen neuen gewonnenen Preis zur Liste hinzu"""
+        from datetime import datetime
+        current_time = datetime.now().strftime("%H:%M:%S")
+        self.won_prizes.append({
+            "prize": prize_text,
+            "won_at": current_time,
+            "crossed": False
+        })
+        # Speichere die Liste
+        self.save_prizes()
+        
+    def toggle_cross(self, index):
+        """Preis als eingelöst markieren/demarkieren"""
+        if 0 <= index < len(self.won_prizes):
+            self.won_prizes[index]["crossed"] = not self.won_prizes[index]["crossed"]
+            self.save_prizes()
+            
+    def save_prizes(self):
+        """Speichere die Preisliste in die Datei"""
+        try:
+            with open('games/won_prizes.py', 'w', encoding='utf-8') as f:
+                f.write("# Liste der bereits gewonnenen Preise\n")
+                f.write("WON_PRIZES = [\n")
+                for prize in self.won_prizes:
+                    f.write(f'    {{"prize": "{prize["prize"]}", "won_at": "{prize["won_at"]}", "crossed": {prize["crossed"]}}},\n')
+                f.write("]\n")
+        except Exception as e:
+            print(f"Error saving won prizes: {str(e)}")
+            
+    def load_prizes(self):
+        """Lade die Preisliste - immer leer beim Start"""
+        self.won_prizes = []
+        # Erstelle leere Datei
+        try:
+            with open('games/won_prizes.py', 'w', encoding='utf-8') as f:
+                f.write("# Liste der bereits gewonnenen Preise\n")
+                f.write("WON_PRIZES = []\n")
+        except Exception as e:
+            print(f"Error resetting won prizes file: {str(e)}")
+            
+    def handle_event(self, event):
+        """Handle mouse events"""
+        if not self.visible:
+            return False
+            
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Handle scrolling
+            if event.button == 4:  # Mouse wheel up
+                self.scroll_y = max(0, self.scroll_y - 20)
+                return True
+            elif event.button == 5:  # Mouse wheel down
+                self.scroll_y = min(self.max_scroll, self.scroll_y + 20)
+                return True
+            
+            # Handle prize clicking (to cross out)
+            if event.button == 1:  # Left click
+                mouse_pos = pygame.mouse.get_pos()
+                if self.rect.collidepoint(mouse_pos):
+                    # Calculate which prize was clicked
+                    rel_y = mouse_pos[1] - self.rect.y + self.scroll_y
+                    clicked_index = rel_y // self.line_height
+                    if 0 <= clicked_index < len(self.won_prizes):
+                        self.toggle_cross(clicked_index)
+                        return True
+        
+        return False
+        
+    def draw(self, screen):
+        """Draw the won prizes list"""
+        if not self.visible:
+            return
+            
+        # Draw background
+        pygame.draw.rect(screen, (240, 240, 240), self.rect)
+        pygame.draw.rect(screen, (0, 0, 0), self.rect, 2)
+        
+        # Draw title
+        title = self.font.render("Gewonnene Preise", True, (0, 0, 0))
+        title_rect = title.get_rect(centerx=self.rect.centerx, top=self.rect.top + 10)
+        screen.blit(title, title_rect)
+        
+        # Calculate visible area
+        visible_rect = pygame.Rect(
+            self.rect.x,
+            self.rect.y + 40,  # Space for title
+            self.rect.width,
+            self.rect.height - 60  # Space for spin counter at bottom
+        )
+        
+        # Draw prizes
+        y = visible_rect.y - self.scroll_y
+        for prize in self.won_prizes:
+            if y + self.line_height > visible_rect.y and y < visible_rect.bottom:
+                # Draw time
+                time_text = self.font.render(prize["won_at"], True, (100, 100, 100))
+                screen.blit(time_text, (visible_rect.x + 5, y))
+                
+                # Draw prize text with more space for the text
+                prize_text = self.font.render(prize["prize"], True, (0, 0, 0))
+                text_x = visible_rect.x + 120  # Mehr Platz für die Zeit
+                
+                if prize["crossed"]:
+                    # Draw strikethrough
+                    pygame.draw.line(screen, (255, 0, 0),
+                        (text_x, y + self.line_height//2),
+                        (text_x + prize_text.get_width(), y + self.line_height//2),
+                        2
+                    )
+                
+                screen.blit(prize_text, (text_x, y))
+            
+            y += self.line_height
+        
+        # Update max scroll
+        self.max_scroll = max(0, y - visible_rect.bottom)
+        
+        # Draw spin counter at bottom
+        if hasattr(self, 'slot_machine'):
+            spins_text = self.font.render(f"Spins: {self.slot_machine.spin_count}", True, (0, 0, 0))
+            spins_rect = spins_text.get_rect(centerx=self.rect.centerx, bottom=self.rect.bottom - 10)
+            screen.blit(spins_text, spins_rect)
